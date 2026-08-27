@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0f19">
+    <title>Ajedrez 3D - Experiencia Cinemática & Gran Maestro</title>
+    <meta name="description"
+        content="Una plataforma cinematográfica de ajedrez 3D para iPad, tablets, móviles y PC con sonido envolvente orquestal, efectos visuales de película, tutor interactivo en tiempo real y academia.">
+
+    <!-- Tipografías de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+
+    <!-- Hojas de Estilos Modulares (CSS) -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/board-ui.css">
+    <link rel="stylesheet" href="css/learning.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+    <!-- Librerías Externas de Three.js, Tween y Motor Chess -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+</head>
+
+<body class="menu-active">
+
+    <div id="app-container">
+        <!-- Contenedor 3D WebGL Three.js -->
+        <div id="canvas-container"></div>
+
+        <!-- Efecto de Viñeta Cinemática de Película -->
+        <div id="cinematic-vignette"></div>
+
+        <!-- Capa de Interfaz de Usuario (HUD) -->
+        <div id="ui-layer">
+
+            <!-- Barra Superior: marca y relojes de ajedrez duales -->
+            <header id="top-bar">
+                <div class="brand-section">
+                    <h1 class="brand-logo font-heading">AJEDREZ</h1>
+                    <span class="brand-badge font-accent">CINEMATIC 3D</span>
+                </div>
+
+                <!-- Relojes de Ajedrez Duales en el HUD -->
+                <div id="chess-clocks-hud" class="clocks-hud-container" style="display: none;">
+                    <div id="clock-black" class="clock-badge clock-black" data-color="b">
+                        <span class="clock-avatar">♚</span>
+                        <div class="clock-info">
+                            <span class="clock-player-name">Negras</span>
+                            <span class="clock-timer" id="timer-black">05:00</span>
+                        </div>
+                    </div>
+                    <div class="clock-divider-glow">VS</div>
+                    <div id="clock-white" class="clock-badge clock-white active" data-color="w">
+                        <span class="clock-avatar">♔</span>
+                        <div class="clock-info">
+                            <span class="clock-player-name">Blancas</span>
+                            <span class="clock-timer" id="timer-white">05:00</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Banner Superior de Lección / Puzzle Activo -->
+            <div id="lesson-banner">
+                <div class="banner-step-title">Título de la Lección</div>
+                <div class="banner-step-instruction">Instrucción paso a paso del movimiento.</div>
+                <div class="banner-actions">
+                    <button id="btn-banner-hint" class="btn" style="padding: 6px 14px; font-size: 0.75rem;">💡 Ver Pista
+                        3D</button>
+                </div>
+            </div>
+
+            <!-- Panel Lateral Izquierdo: Historial de Movimientos -->
+            <aside id="history-panel" class="side-panel">
+                <div class="panel-header">
+                    <div class="panel-title">📜 Historial</div>
+                    <span class="badge">PGN</span>
+                </div>
+                <div id="move-history"></div>
+            </aside>
+
+            <!-- Panel Lateral Derecho: Bajas en Combate & Barra de Evaluación -->
+            <aside id="stats-panel" class="side-panel">
+                <div class="panel-header">
+                    <div class="panel-title">⚔️ Capturas</div>
+                </div>
+
+                <div class="captured-box">
+                    <div class="captured-label">
+                        <span>Por Blancas (Marfil)</span>
+                    </div>
+                    <div id="captured-by-white" class="captured-pieces-row"></div>
+                </div>
+
+                <div class="captured-box">
+                    <div class="captured-label">
+                        <span>Por Negras (Obsidiana)</span>
+                    </div>
+                    <div id="captured-by-black" class="captured-pieces-row"></div>
+                </div>
+
+                <div class="eval-bar-wrapper">
+                    <div class="captured-label">
+                        <span>Balance de Posición</span>
+                    </div>
+                    <div class="eval-bar-container">
+                        <div id="eval-white" class="eval-bar-white"></div>
+                        <div id="eval-black" class="eval-bar-black"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Widget del Tutor Inteligente en Tiempo Real (AI Coach) -->
+            <div id="ai-coach-card">
+                <div class="coach-header">
+                    <div class="coach-avatar">🤖</div>
+                    <div class="coach-name">Tutor Gran Maestro</div>
+                </div>
+                <div id="coach-msg-text" class="coach-message">¡Bienvenido! Mueve tus piezas para comenzar a recibir
+                    análisis en tiempo real.</div>
+            </div>
+
+            <!-- Barra Inferior de Estado y Controles -->
+            <footer id="bottom-bar">
+                <div id="status-indicator">
+                    <div class="turn-orb"></div>
+                    <span id="status-text">Turno de las Blancas</span>
+                    <span id="ai-thinking-badge">⚡ La IA está pensando...</span>
+                </div>
+
+                <!-- Panel desplegable con el resto de opciones (se abre hacia arriba) -->
+                <div id="options-dropdown">
+                    <div class="options-section">
+                        <span class="options-field-label">Modo</span>
+                        <div class="options-mode-switch">
+                            <button class="mode-tab active" data-mode="game">⚔️ Partida</button>
+                            <button class="mode-tab" data-mode="academy">🎓 Academia</button>
+                            <button class="mode-tab" data-mode="puzzles">🧩 Puzzles</button>
+                        </div>
+                    </div>
+
+                    <div class="options-section options-grid">
+                        <div class="options-field">
+                            <span class="options-field-label">Dificultad</span>
+                            <select id="difficulty-select" class="select-custom" title="Dificultad de la IA">
+                                <option value="adaptive" selected>🧠 Adaptación</option>
+                                <option value="easy">🌱 Fácil</option>
+                                <option value="medium">⚔️ Media</option>
+                                <option value="hard">👑 Gran Maestro</option>
+                            </select>
+                        </div>
+
+                        <div class="options-field">
+                            <span class="options-field-label">Reloj</span>
+                            <select id="time-control-select" class="select-custom" title="Control de Tiempo">
+                                <option value="none" selected>⏱️ Ilimitado</option>
+                                <option value="1+0">⚡ 1m Bullet</option>
+                                <option value="3+0">🔥 3m Blitz</option>
+                                <option value="3+2">⏳ 3m + 2s</option>
+                                <option value="5+0">⚔️ 5m Blitz</option>
+                                <option value="10+0">🏆 10m Rápida</option>
+                                <option value="15+10">🏛️ 15m + 10s</option>
+                            </select>
+                        </div>
+
+                        <div class="options-field">
+                            <span class="options-field-label">Calidad 3D</span>
+                            <select id="graphics-select" class="select-custom" title="Calidad Gráfica">
+                                <option value="ultra" selected>👑 Ultra 3D</option>
+                                <option value="medium">⚔️ Equilibrada</option>
+                                <option value="low">⚡ Rendimiento</option>
+                            </select>
+                        </div>
+
+                        <div class="options-field">
+                            <span class="options-field-label">Cámara</span>
+                            <select id="camera-select" class="select-custom" title="Vistas de Cámara">
+                                <option value="standard">🎥 Panorámica</option>
+                                <option value="dramatic">⚔️ Combate Rasante</option>
+                                <option value="top">📐 Cenital Táctica</option>
+                                <option value="side">🏛️ Lateral Estudio</option>
+                            </select>
+                        </div>
+
+                        <div class="options-field">
+                            <span class="options-field-label">Escena</span>
+                            <select id="theme-select" class="select-custom" title="Tema de la Escena">
+                                <option value="elegance">✨ Elegance</option>
+                                <option value="cyber">⚡ Cyber</option>
+                                <option value="royal">👑 Palacio</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="options-section">
+                        <span id="adaptive-level-badge" class="badge"
+                            title="Sube cuando ganas, baja un poco cuando pierdes. Se guarda en este navegador.">🧠
+                            Nivel IA: 30/100 · 0 partidas</span>
+                    </div>
+
+                    <div class="options-section options-row-icons">
+                        <button id="btn-director" class="btn btn-icon active-gold"
+                            title="Modo Director: Tomas dinámicas">🎬</button>
+
+                        <div class="audio-control-wrapper">
+                            <button id="btn-audio" class="btn btn-icon" title="Silenciar / Activar Audio">🔊</button>
+                            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.75"
+                                title="Volumen">
+                        </div>
+
+                        <button id="btn-fullscreen" class="btn btn-icon" title="Pantalla Completa">⛶</button>
+                        <button id="btn-toggle-panels" class="btn btn-icon mobile-panel-btn"
+                            title="Ver Historial y Capturas">📊</button>
+                    </div>
+
+                    <div class="options-section">
+                        <button id="btn-menu-exit" class="btn" title="Menú Principal">🏠 Menú Principal</button>
+                    </div>
+                </div>
+
+                <div class="game-controls-bar">
+                    <button id="btn-undo" class="ctrl-btn" title="Deshacer última jugada">↩ Deshacer</button>
+                    <button id="btn-flip" class="ctrl-btn" title="Girar perspectiva del tablero">🔄 Voltear</button>
+                    <button id="btn-autoflip" class="ctrl-btn" title="Auto-giro en cada turno (2 Jugadores)">🔁
+                        Auto-Giro: OFF</button>
+                    <button id="btn-new" class="ctrl-btn" title="Reiniciar partida">✨ Nueva Partida</button>
+                    <div class="ctrl-divider"></div>
+                    <button id="btn-trail" class="ctrl-btn active-tool"
+                        title="Mostrar u ocultar el rastro de jugadas">🎯 Rastro: ON</button>
+                    <button id="btn-hint" class="ctrl-btn" title="Rayo holográfico de sugerencia">💡 Pista 3D</button>
+                    <button id="btn-heatmap" class="ctrl-btn" title="Mapa térmico de amenazas">👁️ Amenazas</button>
+                    <div class="ctrl-divider"></div>
+                    <button id="btn-menu-toggle" class="ctrl-btn" title="Más opciones">⚙️ Menú</button>
+                </div>
+            </footer>
+
+        </div>
+
+        <!-- Cajón Desplegable de la Academia (Drawer) -->
+        <div id="learning-drawer">
+            <div class="drawer-header">
+                <div class="drawer-header-info">
+                    <div class="drawer-title font-heading">🎓 Escuela de Maestría</div>
+                    <span id="academy-progress-badge" class="badge">0/10 completadas</span>
+                </div>
+                <button id="close-drawer-btn" class="btn btn-icon" style="width: 36px; height: 36px;">✕</button>
+            </div>
+            <div class="drawer-content" id="lessons-container">
+                <!-- Se rellena dinámicamente desde UI.js -->
+            </div>
+        </div>
+
+        <!-- Modal de Coronación de Peón -->
+        <div id="promotion-modal" class="modal-overlay">
+            <div class="modal-card">
+                <div class="modal-title">Coronación Imperial</div>
+                <div class="modal-desc">Elige la pieza en la que deseas transformar tu peón:</div>
+                <div class="promo-grid">
+                    <button class="promo-btn" data-piece="q" title="Dama">♕</button>
+                    <button class="promo-btn" data-piece="r" title="Torre">♖</button>
+                    <button class="promo-btn" data-piece="b" title="Alfil">♗</button>
+                    <button class="promo-btn" data-piece="n" title="Caballo">♘</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Fin de Partida / Victoria -->
+        <div id="game-over-modal" class="modal-overlay">
+            <div class="modal-card">
+                <div class="result-trophy">🏆</div>
+                <div id="game-over-title" class="modal-title">¡Jaque Mate!</div>
+                <div id="game-over-desc" class="modal-desc">Las Blancas han ganado la partida.</div>
+                <div class="modal-actions">
+                    <button id="btn-modal-new" class="btn btn-primary"
+                        onclick="document.getElementById('btn-new').click()">Jugar Otra Vez</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Lección Completada (Academia) -->
+        <div id="lesson-complete-modal" class="modal-overlay">
+            <div class="modal-card">
+                <div class="result-trophy">🎓</div>
+                <div class="modal-title">¡Lección Completada!</div>
+                <div id="lesson-complete-desc" class="modal-desc">Has completado la lección.</div>
+                <div class="modal-actions">
+                    <button id="btn-lesson-complete-close" class="btn">Cerrar</button>
+                    <button id="btn-lesson-complete-academy" class="btn btn-primary">Elegir Otra Lección</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Ajustes y Preferencias de Partida -->
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-card settings-modal-card">
+                <div class="modal-header-row">
+                    <div class="modal-title font-heading" style="font-size: 1.35rem; margin-bottom: 0;">⚙️ Ajustes de Partida</div>
+                    <button id="btn-close-settings-modal" class="btn btn-icon modal-close-x" title="Cerrar">✕</button>
+                </div>
+                
+                <div class="settings-modal-body">
+                    <!-- Sección Ritmo de Juego / Reloj -->
+                    <div class="settings-group">
+                        <div class="settings-group-header">
+                            <span class="settings-group-title font-heading">⏱️ Ritmo de Juego (Reloj)</span>
+                            <span class="settings-group-desc">Elige la modalidad de tiempo para tus partidas:</span>
+                        </div>
+                        <div class="settings-presets-grid">
+                            <button class="settings-time-btn active" data-time="none">
+                                <span class="time-btn-icon">♾️</span>
+                                <span class="time-btn-title">Ilimitado</span>
+                                <span class="time-btn-sub">Sin reloj</span>
+                            </button>
+                            <button class="settings-time-btn" data-time="1+0">
+                                <span class="time-btn-icon">⚡</span>
+                                <span class="time-btn-title">1 min</span>
+                                <span class="time-btn-sub">Bullet</span>
+                            </button>
+                            <button class="settings-time-btn" data-time="3+0">
+                                <span class="time-btn-icon">🔥</span>
+                                <span class="time-btn-title">3 min</span>
+                                <span class="time-btn-sub">Blitz</span>
+                            </button>
+                            <button class="settings-time-btn" data-time="3+2">
+                                <span class="time-btn-icon">⏳</span>
+                                <span class="time-btn-title">3m + 2s</span>
+                                <span class="time-btn-sub">Incremento</span>
+                            </button>
+                            <button class="settings-time-btn" data-time="5+0">
+                                <span class="time-btn-icon">⚔️</span>
+                                <span class="time-btn-title">5 min</span>
+                                <span class="time-btn-sub">Blitz clásico</span>
+                            </button>
+                            <button class="settings-time-btn" data-time="10+0">
+                                <span class="time-btn-icon">🏆</span>
+                                <span class="time-btn-title">10 min</span>
+                                <span class="time-btn-sub">Rápida</span>
+                            </button>
+                            <button class="settings-time-btn" data-time="15+10">
+                                <span class="time-btn-icon">🏛️</span>
+                                <span class="time-btn-title">15m + 10s</span>
+                                <span class="time-btn-sub">Clásica</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sección Calidad Gráfica & Tema -->
+                    <div class="settings-row-fields">
+                        <div class="settings-field-box">
+                            <label class="settings-label">Calidad Gráfica 3D</label>
+                            <select id="modal-graphics-select" class="select-custom select-wide">
+                                <option value="ultra" selected>👑 Ultra / Cinemática</option>
+                                <option value="medium">⚔️ Equilibrada (1080p)</option>
+                                <option value="low">⚡ Rendimiento (60 FPS)</option>
+                            </select>
+                        </div>
+
+                        <div class="settings-field-box">
+                            <label class="settings-label">Tema de Escenario</label>
+                            <select id="modal-theme-select" class="select-custom select-wide">
+                                <option value="elegance" selected>✨ Estudio Elegance</option>
+                                <option value="cyber">⚡ Cyber Grandmaster</option>
+                                <option value="royal">👑 Palacio Real</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions" style="margin-top: 18px;">
+                    <button id="btn-save-settings" class="btn btn-primary" style="width: 100%;">✓ Guardar Preferencias</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Inicio Cinemática (Hero Hub 3D) -->
+        <div id="start-overlay">
+            <!-- Botón flotante de Ajustes en la esquina superior -->
+            <div class="start-header-corner">
+                <button id="btn-start-settings" class="hero-settings-icon-btn" title="Ajustes de Partida (Reloj, Calidad 3D y Tema)" aria-label="Ajustes de Partida">
+                    <span class="hero-settings-icon">⚙️</span>
+                </button>
+            </div>
+
+            <div class="hero-title-group">
+                <div class="hero-eyebrow font-accent">
+                    <span class="hero-eyebrow-icon">✦</span>
+                    <span>AJEDREZ EN TRES DIMENSIONES</span>
+                    <span class="hero-eyebrow-icon">✦</span>
+                </div>
+                <h1 class="hero-title font-heading">AJEDREZ</h1>
+                <div class="hero-divider" aria-hidden="true">
+                    <span class="hero-divider-line"></span>
+                    <span class="hero-divider-glyph">♞</span>
+                    <span class="hero-divider-line"></span>
+                </div>
+                <div class="hero-subtitle">TABLERO DE MARFIL Y OBSIDIANA &bull; TUTOR EN VIVO</div>
+            </div>
+
+            <div class="hero-actions-container">
+                <button id="start-btn-ai" class="btn-hero btn-hero-primary" data-mode="ai">
+                    <span class="hero-badge-tag">RECOMENDADO</span>
+                    <div class="hero-card-media">
+                        <img src="assets/card_ai.svg" alt="Modo IA" class="hero-card-img" />
+                    </div>
+                    <div class="hero-btn-content">
+                        <span class="hero-btn-label">JUGAR CONTRA LA IA</span>
+                        <span class="hero-btn-desc">Tutor en vivo y cálculo minimax adaptativo</span>
+                    </div>
+                </button>
+
+                <button id="start-btn-pvp" class="btn-hero" data-mode="pvp">
+                    <div class="hero-card-media">
+                        <img src="assets/card_pvp.svg" alt="Jugador vs Jugador" class="hero-card-img" />
+                    </div>
+                    <div class="hero-btn-content">
+                        <span class="hero-btn-label">JUGADOR VS JUGADOR</span>
+                        <span class="hero-btn-desc">Duelo limpio en el mismo iPad, móvil o PC</span>
+                    </div>
+                </button>
+
+                <button id="start-btn-academy" class="btn-hero" data-mode="academy">
+                    <div class="hero-card-media">
+                        <img src="assets/card_academy.svg" alt="Academia & Puzzles" class="hero-card-img" />
+                    </div>
+                    <div class="hero-btn-content">
+                        <span class="hero-btn-label">ACADEMIA & PUZZLES</span>
+                        <span class="hero-btn-desc">Lecciones guiadas en 3D y retos tácticos</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Módulos JavaScript -->
+    <script src="js/audio.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/effects.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/learning.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>

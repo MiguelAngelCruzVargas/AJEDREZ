@@ -1,0 +1,247 @@
+/* ==========================================================================
+   MAIN.CSS - Variables de tema, tipografías, resets y diseño base multi-dispositivo
+   ========================================================================== */
+
+:root {
+    /* Tema 1: Estudio Elegance (Por Defecto) */
+    --bg-gradient-start: #141824;
+    --bg-gradient-end: #0a0d14;
+    --studio-ambient: #1b2030;
+    --accent-gold: #d4af37;
+    --accent-gold-light: #f7e08b;
+    --accent-gold-dark: #aa851d;
+    --accent-gold-glow: rgba(212, 175, 55, 0.45);
+    
+    --accent-blue: #38bdf8;
+    --accent-blue-glow: rgba(56, 189, 248, 0.45);
+    --accent-red: #f43f5e;
+    --accent-green: #10b981;
+    --accent-purple: #a855f7;
+
+    --panel-bg: rgba(16, 21, 34, 0.84);
+    --panel-bg-solid: #151a28;
+    --panel-border: rgba(212, 175, 55, 0.28);
+    --panel-border-hover: rgba(212, 175, 55, 0.65);
+    --panel-shadow: 0 15px 35px rgba(0, 0, 0, 0.55);
+
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-gold: #e2c056;
+
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Montserrat', sans-serif;
+    --font-accent: 'Cinzel', serif;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Variación Tema: Cyber Grandmaster */
+[data-theme="cyber"] {
+    --bg-gradient-start: #090e1f;
+    --bg-gradient-end: #04060d;
+    --studio-ambient: #0f172a;
+    --accent-gold: #00f0ff;
+    --accent-gold-light: #70f7ff;
+    --accent-gold-dark: #00a0b0;
+    --accent-gold-glow: rgba(0, 240, 255, 0.4);
+    --text-gold: #38bdf8;
+    --panel-bg: rgba(9, 14, 31, 0.88);
+    --panel-border: rgba(0, 240, 255, 0.28);
+    --panel-border-hover: rgba(0, 240, 255, 0.7);
+}
+
+/* Variación Tema: Palacio Real */
+[data-theme="royal"] {
+    --bg-gradient-start: #23161c;
+    --bg-gradient-end: #120a0e;
+    --studio-ambient: #2e1d24;
+    --accent-gold: #e8b058;
+    --accent-gold-light: #f5cf8c;
+    --accent-gold-dark: #b87b28;
+    --accent-gold-glow: rgba(232, 176, 88, 0.45);
+    --text-gold: #f0c575;
+    --panel-bg: rgba(35, 22, 28, 0.88);
+    --panel-border: rgba(232, 176, 88, 0.32);
+    --panel-border-hover: rgba(232, 176, 88, 0.75);
+}
+
+/* Resets y estructura base */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 35%, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+}
+
+#app-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* Soporte dinámico de viewport en iOS Safari y móviles */
+    overflow: hidden;
+}
+
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    cursor: grab;
+    touch-action: none; /* Control 3D sin gestos indeseados del navegador */
+}
+
+#canvas-container:active {
+    cursor: grabbing;
+}
+
+/* Viñeta Cinemática de Película */
+#cinematic-vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(6, 9, 16, 0.65) 100%);
+}
+
+/* Utilidades Tipográficas */
+.font-heading { font-family: var(--font-heading); }
+.font-accent { font-family: var(--font-accent); }
+
+/* Scrollbars estilizadas */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--accent-gold-dark);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-gold);
+}
+
+/* Botones Base con área táctil cómoda */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--panel-bg);
+    color: var(--text-gold);
+    border: 1px solid var(--panel-border);
+    padding: 10px 18px;
+    min-height: 42px;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: var(--transition-fast);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    outline: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    background: var(--accent-gold);
+    color: #0c0f17;
+    border-color: var(--accent-gold-light);
+    box-shadow: 0 0 20px var(--accent-gold-glow), 0 4px 15px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn.active-gold {
+    background: rgba(212, 175, 55, 0.25);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold-light);
+    box-shadow: 0 0 15px var(--accent-gold-glow);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-gold-dark), var(--accent-gold));
+    color: #0b0e14;
+    font-weight: 700;
+    border: 1px solid var(--accent-gold-light);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-light));
+    box-shadow: 0 0 25px var(--accent-gold-glow);
+}
+
+.btn-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: var(--radius-full);
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--text-gold);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.badge-blue {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent-blue);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.badge-green {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-green);
+    border-color: rgba(16, 185, 129, 0.3);
+}

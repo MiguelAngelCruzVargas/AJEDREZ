@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="100%" height="100%">
+  <defs>
+    <!-- Gradientes de Fondo -->
+    <radialGradient id="bgGlowPvP" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1e1b4b" stop-opacity="0.75"/>
+      <stop offset="60%" stop-color="#0f172a" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#050811" stop-opacity="1"/>
+    </radialGradient>
+
+    <!-- Gradientes Pieza Blanca (Marfil Cálido) -->
+    <linearGradient id="ivoryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#f8fafc"/>
+      <stop offset="85%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+
+    <!-- Gradientes Pieza Negra (Obsidiana Oscura) -->
+    <linearGradient id="obsidianGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="40%" stop-color="#1e293b"/>
+      <stop offset="85%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Gradiente Dorado -->
+    <linearGradient id="goldTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+
+    <filter id="softShadowPvP" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Fondo de Estudio -->
+  <rect width="600" height="340" fill="url(#bgGlowPvP)"/>
+
+  <!-- Líneas de Duelo Central Sutiles -->
+  <g opacity="0.15">
+    <line x1="300" y1="40" x2="300" y2="280" stroke="#eab308" stroke-width="1.5" stroke-dasharray="4,8"/>
+    <circle cx="300" cy="160" r="70" fill="none" stroke="#eab308" stroke-width="1"/>
+  </g>
+
+  <!-- Símbolo "VS" Elegante en el Centro -->
+  <g transform="translate(300, 160)" opacity="0.85">
+    <circle r="22" fill="#0f172a" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    <text x="0" y="6" text-anchor="middle" font-family="'Montserrat', sans-serif" font-size="14" font-weight="900" fill="#fef08a" letter-spacing="1">VS</text>
+  </g>
+
+  <!-- ==================== CABALLO BLANCO (IZQUIERDA) ==================== -->
+  <g transform="translate(195, 75)" filter="url(#softShadowPvP)">
+    <!-- Base del Caballo Blanco -->
+    <g transform="translate(0, 150)">
+      <ellipse cx="0" cy="22" rx="48" ry="14" fill="#000000" opacity="0.4"/>
+      <!-- Reborde Inferior Base -->
+      <path d="M-42,12 C-42,6 -24,4 0,4 C24,4 42,6 42,12 L42,22 C42,28 24,30 0,30 C-24,30 -42,28 -42,22 Z" 
+            fill="url(#ivoryGrad)" stroke="#94a3b8" stroke-width="1"/>
+      <ellipse cx="0" cy="12" rx="42" ry="8" fill="url(#ivoryGrad)" stroke="#cbd5e1" stroke-width="0.8"/>
+      <!-- Pedestal Central -->
+      <path d="M-30,-6 C-30,-12 -18,-14 0,-14 C18,-14 30,-12 30,-6 L36,12 C36,18 20,20 0,20 C-20,20 -36,18 -36,12 Z" 
+            fill="url(#ivoryGrad)" stroke="#cbd5e1" stroke-width="0.8"/>
+      <ellipse cx="0" cy="-6" rx="30" ry="6" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    </g>
+
+    <!-- Cuerpo y Cabeza del Caballo Blanco (Mirando a la Derecha) -->
+    <!-- Crin y Cuello -->
+    <path d="M-22,142 C-26,110 -30,60 -12,20 C-8,12 2,10 14,14 C16,15 17,20 12,25 C-2,38 -4,75 5,100 C10,115 15,130 18,142 Z" 
+          fill="url(#ivoryGrad)" stroke="#94a3b8" stroke-width="1"/>
+    
+    <!-- Cabeza y Hocico del Caballo -->
+    <path d="M-10,22 C0,15 18,18 28,30 C34,38 42,50 48,58 C52,64 48,72 40,70 C34,68 28,64 22,66 C14,68 4,88 2,105 C0,120 -15,138 -20,142 C-26,120 -20,80 -18,55 C-18,40 -15,28 -10,22 Z" 
+          fill="url(#ivoryGrad)" stroke="#94a3b8" stroke-width="1.2"/>
+    
+    <!-- Ojo del Caballo Blanco -->
+    <circle cx="20" cy="42" r="3" fill="#1e293b"/>
+    <circle cx="21" cy="41" r="1" fill="#ffffff"/>
+
+    <!-- Oreja -->
+    <path d="M5,12 L14,24 L2,22 Z" fill="url(#ivoryGrad)" stroke="#94a3b8" stroke-width="1"/>
+    
+    <!-- Detalles de la Crin / Muescas -->
+    <path d="M-14,35 Q-8,45 -12,55" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <path d="M-18,65 Q-12,75 -16,85" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    <path d="M-22,95 Q-16,105 -20,115" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+    
+    <!-- Muesca del Hocico -->
+    <path d="M38,62 Q42,66 36,68" fill="none" stroke="#94a3b8" stroke-width="1.2"/>
+  </g>
+
+  <!-- ==================== CABALLO NEGRO (DERECHA) ==================== -->
+  <g transform="translate(405, 75) scale(-1, 1)" filter="url(#softShadowPvP)">
+    <!-- Base del Caballo Negro -->
+    <g transform="translate(0, 150)">
+      <ellipse cx="0" cy="22" rx="48" ry="14" fill="#000000" opacity="0.6"/>
+      <!-- Reborde Inferior Base -->
+      <path d="M-42,12 C-42,6 -24,4 0,4 C24,4 42,6 42,12 L42,22 C42,28 24,30 0,30 C-24,30 -42,28 -42,22 Z" 
+            fill="url(#obsidianGrad)" stroke="#475569" stroke-width="1"/>
+      <ellipse cx="0" cy="12" rx="42" ry="8" fill="url(#obsidianGrad)" stroke="#334155" stroke-width="0.8"/>
+      <!-- Pedestal Central -->
+      <path d="M-30,-6 C-30,-12 -18,-14 0,-14 C18,-14 30,-12 30,-6 L36,12 C36,18 20,20 0,20 C-20,20 -36,18 -36,12 Z" 
+            fill="url(#obsidianGrad)" stroke="#334155" stroke-width="0.8"/>
+      <ellipse cx="0" cy="-6" rx="30" ry="6" fill="none" stroke="url(#goldTrim)" stroke-width="1.5"/>
+    </g>
+
+    <!-- Cuerpo y Cabeza del Caballo Negro (Mirando a la Izquierda por scale) -->
+    <!-- Crin y Cuello -->
+    <path d="M-22,142 C-26,110 -30,60 -12,20 C-8,12 2,10 14,14 C16,15 17,20 12,25 C-2,38 -4,75 5,100 C10,115 15,130 18,142 Z" 
+          fill="url(#obsidianGrad)" stroke="#334155" stroke-width="1"/>
+    
+    <!-- Cabeza y Hocico del Caballo -->
+    <path d="M-10,22 C0,15 18,18 28,30 C34,38 42,50 48,58 C52,64 48,72 40,70 C34,68 28,64 22,66 C14,68 4,88 2,105 C0,120 -15,138 -20,142 C-26,120 -20,80 -18,55 C-18,40 -15,28 -10,22 Z" 
+          fill="url(#obsidianGrad)" stroke="#475569" stroke-width="1.2"/>
+    
+    <!-- Ojo del Caballo Negro -->
+    <circle cx="20" cy="42" r="3" fill="#eab308"/>
+    <circle cx="21" cy="41" r="1" fill="#ffffff"/>
+
+    <!-- Oreja -->
+    <path d="M5,12 L14,24 L2,22 Z" fill="url(#obsidianGrad)" stroke="#475569" stroke-width="1"/>
+    
+    <!-- Detalles de la Crin / Muescas Doradas -->
+    <path d="M-14,35 Q-8,45 -12,55" fill="none" stroke="#eab308" stroke-width="1.2" opacity="0.6"/>
+    <path d="M-18,65 Q-12,75 -16,85" fill="none" stroke="#eab308" stroke-width="1.2" opacity="0.6"/>
+    <path d="M-22,95 Q-16,105 -20,115" fill="none" stroke="#eab308" stroke-width="1.2" opacity="0.6"/>
+    
+    <!-- Muesca del Hocico -->
+    <path d="M38,62 Q42,66 36,68" fill="none" stroke="#64748b" stroke-width="1.2"/>
+  </g>
+</svg>
