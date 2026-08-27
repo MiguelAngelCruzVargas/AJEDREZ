@@ -48,11 +48,9 @@ const EngineManager = {
 
     // Traduce el rating (0-100) en fuerza real de juego: más profundidad de
     // cálculo y menos probabilidad de "error a propósito" cuanto más alto.
+    // (delega en ai-fallback-core.js, compartido con el Worker de respaldo)
     getAdaptiveStrength: function() {
-        const r = this.adaptive.rating;
-        const depth = r < 34 ? 1 : (r < 67 ? 2 : 3);
-        const blunderChance = Math.max(0.03, 0.45 - (r / 100) * 0.42);
-        return { depth, blunderChance };
+        return ChessAIFallback.getAdaptiveStrength(this.adaptive.rating);
     },
 
     // Llamar cuando una partida vs IA termina en jaque mate o tablas, para que
@@ -73,71 +71,11 @@ const EngineManager = {
         this.saveAdaptiveProgress();
     },
 
-    // Tablas de valores posicionales de piezas para la IA (Piece-Square Tables)
-    pst: {
-        p: [
-            [0,  0,  0,  0,  0,  0,  0,  0],
-            [50, 50, 50, 50, 50, 50, 50, 50],
-            [10, 10, 20, 30, 30, 20, 10, 10],
-            [5,  5, 10, 25, 25, 10,  5,  5],
-            [0,  0,  0, 20, 20,  0,  0,  0],
-            [5, -5,-10,  0,  0,-10, -5,  5],
-            [5, 10, 10,-20,-20, 10, 10,  5],
-            [0,  0,  0,  0,  0,  0,  0,  0]
-        ],
-        n: [
-            [-50,-40,-30,-30,-30,-30,-40,-50],
-            [-40,-20,  0,  0,  0,  0,-20,-40],
-            [-30,  0, 10, 15, 15, 10,  0,-30],
-            [-30,  5, 15, 20, 20, 15,  5,-30],
-            [-30,  0, 15, 20, 20, 15,  0,-30],
-            [-30,  5, 10, 15, 15, 10,  5,-30],
-            [-40,-20,  0,  5,  5,  0,-20,-40],
-            [-50,-40,-30,-30,-30,-30,-40,-50]
-        ],
-        b: [
-            [-20,-10,-10,-10,-10,-10,-10,-20],
-            [-10,  0,  0,  0,  0,  0,  0,-10],
-            [-10,  0,  5, 10, 10,  5,  0,-10],
-            [-10,  5,  5, 10, 10,  5,  5,-10],
-            [-10,  0, 10, 10, 10, 10,  0,-10],
-            [-10, 10, 10, 10, 10, 10, 10,-10],
-            [-10,  5,  0,  0,  0,  0,  5,-10],
-            [-20,-10,-10,-10,-10,-10,-10,-20]
-        ],
-        r: [
-            [0,  0,  0,  0,  0,  0,  0,  0],
-            [5, 10, 10, 10, 10, 10, 10,  5],
-            [-5,  0,  0,  0,  0,  0,  0, -5],
-            [-5,  0,  0,  0,  0,  0,  0, -5],
-            [-5,  0,  0,  0,  0,  0,  0, -5],
-            [-5,  0,  0,  0,  0,  0,  0, -5],
-            [-5,  0,  0,  0,  0,  0,  0, -5],
-            [0,  0,  0,  5,  5,  0,  0,  0]
-        ],
-        q: [
-            [-20,-10,-10, -5, -5,-10,-10,-20],
-            [-10,  0,  0,  0,  0,  0,  0,-10],
-            [-10,  0,  5,  5,  5,  5,  0,-10],
-            [-5,  0,  5,  5,  5,  5,  0, -5],
-            [0,  0,  5,  5,  5,  5,  0, -5],
-            [-10,  5,  5,  5,  5,  5,  0,-10],
-            [-10,  0,  5,  0,  0,  0,  0,-10],
-            [-20,-10,-10, -5, -5,-10,-10,-20]
-        ],
-        k: [
-            [-30,-40,-40,-50,-50,-40,-40,-30],
-            [-30,-40,-40,-50,-50,-40,-40,-30],
-            [-30,-40,-40,-50,-50,-40,-40,-30],
-            [-30,-40,-40,-50,-50,-40,-40,-30],
-            [-20,-30,-30,-40,-40,-30,-30,-20],
-            [-10,-20,-20,-20,-20,-20,-20,-10],
-            [20, 20,  0,  0,  0,  0, 20, 20],
-            [20, 30, 10,  0,  0, 10, 30, 20]
-        ]
-    },
-
-    pieceValues: { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 },
+    // Tablas de valores posicionales y de piezas: viven en ai-fallback-core.js
+    // (compartidas con el Worker de respaldo) - aquí solo se referencian para
+    // no duplicarlas. Ver getCapturedPieces() y evaluatePosition() más abajo.
+    get pst() { return ChessAIFallback.pst; },
+    get pieceValues() { return ChessAIFallback.pieceValues; },
 
     init: function() {
         this.game = new Chess();
@@ -442,25 +380,9 @@ const EngineManager = {
         };
     },
 
-    // Evaluación posicional avanzada del tablero
+    // Evaluación posicional avanzada del tablero (delega en ai-fallback-core.js)
     evaluatePosition: function() {
-        let total = 0;
-        const b = this.game.board();
-
-        for (let r = 0; r < 8; r++) {
-            for (let f = 0; f < 8; f++) {
-                const p = b[r][f];
-                if (p) {
-                    const baseVal = this.pieceValues[p.type];
-                    const pstVal = p.color === 'w' 
-                        ? this.pst[p.type][r][f] 
-                        : this.pst[p.type][7 - r][f];
-                    const val = baseVal + pstVal;
-                    total += (p.color === 'w') ? val : -val;
-                }
-            }
-        }
-        return total;
+        return ChessAIFallback.evaluatePosition(this.game);
     },
 
     // Cálculo del mapa de control de casillas (Threat Vision Heatmap)
@@ -486,91 +408,17 @@ const EngineManager = {
         return controlMap;
     },
 
-    // MINIMAX CON PODA ALFA-BETA
+    // MINIMAX CON PODA ALFA-BETA - delega en ai-fallback-core.js (con
+    // quietud/quiescence incluida al llegar al límite de profundidad).
     minimax: function(depth, alpha, beta, maximizing) {
-        if (depth === 0 || this.game.game_over()) {
-            return this.evaluatePosition();
-        }
-
-        const moves = this.game.moves({ verbose: true });
-        if (maximizing) {
-            let maxEval = -Infinity;
-            for (const m of moves) {
-                this.game.move(m);
-                const ev = this.minimax(depth - 1, alpha, beta, false);
-                this.game.undo();
-                maxEval = Math.max(maxEval, ev);
-                alpha = Math.max(alpha, ev);
-                if (beta <= alpha) break;
-            }
-            return maxEval;
-        } else {
-            let minEval = Infinity;
-            for (const m of moves) {
-                this.game.move(m);
-                const ev = this.minimax(depth - 1, alpha, beta, true);
-                this.game.undo();
-                minEval = Math.min(minEval, ev);
-                beta = Math.min(beta, ev);
-                if (beta <= alpha) break;
-            }
-            return minEval;
-        }
+        return ChessAIFallback.minimax(this.game, depth, alpha, beta, maximizing);
     },
 
-    // Encontrar la mejor jugada para la IA
+    // Encontrar la mejor jugada para la IA - último recurso 100% síncrono
+    // (se usa solo si ni Stockfish ni siquiera el Worker de respaldo pudieron
+    // crearse). Misma lógica de búsqueda que el Worker, vía ai-fallback-core.js.
     findBestAIMove: function() {
-        const moves = this.game.moves({ verbose: true });
-        if (moves.length === 0) return null;
-
-        // Modo Fácil: jugadas aleatorias o capturas directas
-        if (this.aiDifficulty === 'easy') {
-            const captures = moves.filter(m => m.captured);
-            if (captures.length > 0 && Math.random() < 0.7) {
-                return captures[Math.floor(Math.random() * captures.length)];
-            }
-            return moves[Math.floor(Math.random() * moves.length)];
-        }
-
-        // Modo Adaptación: la fuerza (profundidad + probabilidad de error)
-        // sale del rating guardado, que sube o baja según ganes o pierdas.
-        let depth;
-        if (this.aiDifficulty === 'adaptive') {
-            const strength = this.getAdaptiveStrength();
-            if (Math.random() < strength.blunderChance) {
-                return moves[Math.floor(Math.random() * moves.length)];
-            }
-            depth = strength.depth;
-        } else {
-            // Modo Medio y Difícil: Minimax posicional
-            depth = (this.aiDifficulty === 'hard') ? 3 : 2;
-        }
-        const isWhite = this.game.turn() === 'w';
-        let bestMove = null;
-        let bestValue = isWhite ? -Infinity : Infinity;
-
-        // Barajar para que no juegue siempre igual ante valores idénticos
-        moves.sort(() => Math.random() - 0.5);
-
-        for (const m of moves) {
-            this.game.move(m);
-            const val = this.minimax(depth - 1, -Infinity, Infinity, !isWhite);
-            this.game.undo();
-
-            if (isWhite) {
-                if (val > bestValue) {
-                    bestValue = val;
-                    bestMove = m;
-                }
-            } else {
-                if (val < bestValue) {
-                    bestValue = val;
-                    bestMove = m;
-                }
-            }
-        }
-
-        return bestMove || moves[0];
+        return ChessAIFallback.findBestMoveForGame(this.game, this.aiDifficulty, this.adaptive.rating);
     }
 };
 
