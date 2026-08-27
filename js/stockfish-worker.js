@@ -7,7 +7,10 @@
  * self.onmessage y habla el protocolo UCI directo por postMessage). No se
  * puede crear `new Worker(urlDelCDN)` directo por seguridad del navegador
  * (bloquea workers de otro origen aunque el CDN mande CORS), así que este
- * archivo -que sí vive en nuestro propio origen- lo carga con importScripts,
- * que no tiene esa restricción.
+ * archivo -que sí vive en nuestro propio origen- lo carga con importScripts.
+ *
+ * Se auto-aloja en assets/vendor/ (en vez de tirar del CDN en caliente) para
+ * que la app funcione sin conexión una vez instalada como PWA - ver
+ * assets/vendor/README.md.
  */
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.min.js');
+importScripts('../assets/vendor/stockfish.min.js');

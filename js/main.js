@@ -388,3 +388,15 @@ const App = {
 window.addEventListener('DOMContentLoaded', () => {
     App.init();
 });
+
+// Registro del Service Worker (PWA instalable + juego funcional sin
+// conexión). Va aparte de App.init() y no bloquea el arranque: si falla
+// (navegador viejo, servido por file:// en vez de http(s), etc.) el juego
+// sigue funcionando normal, solo sin caché offline.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => {
+            console.warn('No se pudo registrar el Service Worker (¿servido por file://?):', err.message);
+        });
+    });
+}

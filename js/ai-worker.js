@@ -16,9 +16,13 @@
  * La lógica de evaluación/búsqueda en sí vive en ai-fallback-core.js,
  * compartida con el respaldo síncrono de engine.js, para que la IA piense
  * igual en las dos rutas (ver el comentario de ese archivo).
+ *
+ * chess.js se auto-aloja en assets/vendor/ (no se tira del CDN en caliente)
+ * para que este respaldo siga funcionando sin conexión - ver
+ * assets/vendor/README.md.
  */
 
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js');
+importScripts('../assets/vendor/chess.min.js');
 importScripts('ai-fallback-core.js');
 
 self.onmessage = function(e) {
