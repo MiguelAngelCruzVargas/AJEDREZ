@@ -549,8 +549,28 @@ const UIManager = {
         const container = document.getElementById('lessons-container');
         if (!container) return;
 
-        let html = '';
-        const categories = ['Fundamentos', 'Tácticas', 'Aperturas'];
+        // Ficha de referencia "Conoce las Piezas": nombre, valor, para qué
+        // sirve y cómo se mueve cada una. Va primero, antes del catálogo de
+        // lecciones interactivas.
+        let html = `
+            <div class="lesson-category">
+                <div class="category-title">Conoce las Piezas</div>
+                <div class="piece-guide-grid">
+                    ${LearningManager.pieceGuide.map(p => `
+                        <div class="piece-guide-card">
+                            <div class="piece-guide-glyph">${p.glyph}</div>
+                            <div class="piece-guide-name">
+                                <span>${p.name}</span>
+                                <span class="piece-guide-value">${p.value}</span>
+                            </div>
+                            <div class="piece-guide-desc">${p.role}</div>
+                            <div class="piece-guide-moves">♟️ ${p.moves}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        const categories = ['Fundamentos', 'Tácticas', 'Aperturas', 'Finales'];
 
         categories.forEach(cat => {
             const catLessons = LearningManager.lessons.filter(l => l.category === cat);

@@ -137,6 +137,68 @@
     font-weight: 600;
 }
 
+/* Ficha de referencia "Conoce las Piezas" */
+.piece-guide-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.piece-guide-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: var(--transition-fast);
+}
+
+.piece-guide-card:hover {
+    background: rgba(212, 175, 55, 0.08);
+    border-color: rgba(212, 175, 55, 0.4);
+}
+
+.piece-guide-glyph {
+    font-size: 1.7rem;
+    line-height: 1;
+    color: var(--accent-gold-light);
+    text-shadow: 0 0 12px var(--accent-gold-glow);
+}
+
+.piece-guide-name {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.piece-guide-value {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+    white-space: nowrap;
+}
+
+.piece-guide-desc {
+    font-size: 0.68rem;
+    line-height: 1.35;
+    color: var(--text-secondary);
+}
+
+.piece-guide-moves {
+    font-size: 0.68rem;
+    line-height: 1.35;
+    color: var(--text-muted);
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-top: 4px;
+    margin-top: 2px;
+}
+
 /* --------------------------------------------------------------------------
    BANNER SUPERIOR DE INSTRUCCIÓN DE LECCIÓN / PUZZLE ACTIVO
    -------------------------------------------------------------------------- */

@@ -41,6 +41,57 @@ const LearningManager = {
     },
 
     // ==========================================================================
+    // CONOCE LAS PIEZAS - ficha de referencia rápida (nombre, valor, para qué
+    // sirve y cómo se mueve). No es una lección interactiva como las de abajo,
+    // es la introducción antes de practicar el movimiento de cada una en las
+    // lecciones de "Fundamentos".
+    // ==========================================================================
+    pieceGuide: [
+        {
+            glyph: '♔',
+            name: 'Rey',
+            value: 'Invaluable',
+            role: 'La pieza que hay que proteger siempre. Si la dejan en jaque mate, pierdes la partida.',
+            moves: 'Se mueve una sola casilla en cualquier dirección (horizontal, vertical o diagonal).'
+        },
+        {
+            glyph: '♕',
+            name: 'Dama',
+            value: '9 puntos',
+            role: 'La pieza más poderosa del tablero: combina el alcance de la torre y el alfil.',
+            moves: 'Se mueve en línea recta o en diagonal, tantas casillas como quieras.'
+        },
+        {
+            glyph: '♖',
+            name: 'Torre',
+            value: '5 puntos',
+            role: 'Clave en los finales de partida y en el enroque con el rey.',
+            moves: 'Se mueve en línea recta, horizontal o vertical, cualquier número de casillas.'
+        },
+        {
+            glyph: '♗',
+            name: 'Alfil',
+            value: '3 puntos',
+            role: 'Cada bando tiene dos: uno de casillas claras y otro de oscuras.',
+            moves: 'Se desliza en diagonal, siempre por casillas del mismo color.'
+        },
+        {
+            glyph: '♘',
+            name: 'Caballo',
+            value: '3 puntos',
+            role: 'La única pieza capaz de saltar por encima de las demás.',
+            moves: 'Se mueve en forma de "L": dos casillas en una dirección y una en perpendicular.'
+        },
+        {
+            glyph: '♙',
+            name: 'Peón',
+            value: '1 punto',
+            role: 'El más numeroso (8 por bando). Si llega a la última fila, corona y se convierte en otra pieza.',
+            moves: 'Avanza una casilla al frente (dos en su primer movimiento) y captura en diagonal.'
+        }
+    ],
+
+    // ==========================================================================
     // CATÁLOGO DE LECCIONES INTERACTIVAS 3D
     // ==========================================================================
     lessons: [
