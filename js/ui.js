@@ -169,6 +169,28 @@ const UIManager = {
             });
         }
 
+        // Ícono "🎛️" que colapsa/expande la barra de controles (deshacer,
+        // voltear, rastro, pista...) - mismo patrón que el panel de arriba,
+        // para dejarle más pantalla al tablero cuando no se está usando.
+        const btnControlsToggle = document.getElementById('btn-controls-toggle');
+        const gameControlsBar = document.getElementById('game-controls-bar');
+        if (btnControlsToggle && gameControlsBar) {
+            btnControlsToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = gameControlsBar.classList.toggle('open');
+                btnControlsToggle.classList.toggle('active-tool', isOpen);
+                AudioManager.playClick();
+            });
+
+            // Cerrar al hacer clic fuera del panel
+            document.addEventListener('click', (e) => {
+                if (!gameControlsBar.classList.contains('open')) return;
+                if (gameControlsBar.contains(e.target) || e.target === btnControlsToggle) return;
+                gameControlsBar.classList.remove('open');
+                btnControlsToggle.classList.remove('active-tool');
+            });
+        }
+
         // Selector de Dificultad de la IA
         const diffSelect = document.getElementById('difficulty-select');
         if (diffSelect) {

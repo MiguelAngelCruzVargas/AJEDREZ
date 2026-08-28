@@ -142,6 +142,10 @@
 
             <!-- Barra Inferior de Estado y Controles -->
             <footer id="bottom-bar">
+                <!-- Ícono que colapsa la barra de controles (deshacer, voltear,
+                     rastro, pista, etc.) para dejarle más pantalla al tablero -->
+                <button id="btn-controls-toggle" class="controls-fab" title="Controles de partida">🎛️</button>
+
                 <div id="status-indicator">
                     <div class="turn-orb"></div>
                     <span id="status-text">Turno de las Blancas</span>
@@ -238,7 +242,7 @@
                     </div>
                 </div>
 
-                <div class="game-controls-bar">
+                <div class="game-controls-bar" id="game-controls-bar">
                     <button id="btn-undo" class="ctrl-btn" title="Deshacer última jugada">↩ Deshacer</button>
                     <button id="btn-resign" class="ctrl-btn online-only-control" title="Rendirte en esta partida"
                         style="display: none;">🏳️ Rendirse</button>
