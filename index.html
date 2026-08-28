@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="css/board-ui.css">
     <link rel="stylesheet" href="css/learning.css">
     <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/online.css">
 
     <!-- Librerías de Three.js, Tween y Motor Chess (auto-alojadas en
          assets/vendor/ para que la app funcione sin conexión y no dependa
@@ -239,6 +240,10 @@
 
                 <div class="game-controls-bar">
                     <button id="btn-undo" class="ctrl-btn" title="Deshacer última jugada">↩ Deshacer</button>
+                    <button id="btn-resign" class="ctrl-btn online-only-control" title="Rendirte en esta partida"
+                        style="display: none;">🏳️ Rendirse</button>
+                    <button id="btn-offer-draw" class="ctrl-btn online-only-control" title="Ofrecer tablas al rival"
+                        style="display: none;">🤝 Tablas</button>
                     <button id="btn-flip" class="ctrl-btn" title="Girar perspectiva del tablero">🔄 Voltear</button>
                     <button id="btn-autoflip" class="ctrl-btn" title="Auto-giro en cada turno (2 Jugadores)">🔁
                         Auto-Giro: OFF</button>
@@ -441,6 +446,54 @@
                         <span class="hero-btn-desc">Lecciones guiadas en 3D y retos tácticos</span>
                     </div>
                 </button>
+
+                <button id="start-btn-online" class="btn-hero" data-mode="online">
+                    <div class="hero-card-media">
+                        <img src="assets/card_pvp.svg" alt="Jugar Online" class="hero-card-img" />
+                    </div>
+                    <div class="hero-btn-content">
+                        <span class="hero-btn-label">JUGAR ONLINE</span>
+                        <span class="hero-btn-desc">Sala privada por código o enlace, con un amigo</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal de Partida Online (crear/unirse a sala privada) -->
+        <div id="online-modal" class="modal-overlay">
+            <div class="modal-card">
+                <div class="modal-header-row" style="border-bottom: none; margin-bottom: 4px;">
+                    <div class="modal-title" style="margin-bottom: 0;">🌐 Jugar Online</div>
+                    <button id="btn-close-online-modal" class="btn btn-icon modal-close-x" title="Cerrar">✕</button>
+                </div>
+                <div class="modal-desc">Partida privada: crea una sala y comparte el código o el enlace con quien
+                    quieras jugar. Nadie más puede entrar.</div>
+
+                <div id="online-choose-view" class="online-choose-view">
+                    <button id="btn-online-create" class="online-create-btn">
+                        <span class="online-create-btn-title">Crear sala nueva</span>
+                        <span class="online-create-btn-sub">Juegas con las Blancas</span>
+                    </button>
+
+                    <div class="online-divider">o</div>
+
+                    <div class="online-section">
+                        <span class="online-section-label">Unirme con un código</span>
+                        <div class="online-join-row">
+                            <input id="online-join-code-input" class="online-code-input" type="text" maxlength="6"
+                                placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters">
+                            <button id="btn-online-join" class="btn btn-primary">Unirme</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="online-waiting-view" class="online-waiting-view">
+                    <span class="online-section-label">Comparte este código (o el enlace) con tu rival</span>
+                    <div id="online-room-code-display" class="online-room-code">------</div>
+                    <button id="btn-online-copy-link" class="btn">🔗 Copiar enlace</button>
+                    <div class="online-waiting-text"><span class="online-spinner"></span> Esperando a que se una tu
+                        rival...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -454,6 +507,10 @@
     <script src="js/learning.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
+    <!-- Módulo ES (import/export) del modo Online - se ejecuta después de los
+         scripts de arriba (los módulos siempre se difieren), así que
+         EngineManager/UIManager/BoardManager/App ya existen cuando corre. -->
+    <script type="module" src="js/multiplayer.js"></script>
 
 </body>
 

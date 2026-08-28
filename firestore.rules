@@ -1,0 +1,50 @@
+rules_version = '2';
+
+// Reglas de Firestore para el multijugador online de Ajedrez 3D.
+//
+// Modelo: cada partida online es un documento en ajedrez_rooms/{roomCode}.
+// No hay cuentas de usuario - cada jugador entra con un login anonimo de
+// Firebase (un UID estable por dispositivo/navegador, sin pedir contrasena).
+//
+// - Cualquiera autenticado (incluye anonimo) puede LEER una sala si conoce
+//   su codigo - el codigo de 6 caracteres ya funciona como el "secreto"
+//   compartido entre los dos amigos que juegan, no hay listado publico de
+//   salas en ningun lado del cliente.
+// - Solo el creador puede CREAR la sala (queda como jugador "white").
+// - Solo puede ACTUALIZARSE la sala si quien escribe es uno de los dos
+//   jugadores ya asignados, o si esta reclamando el hueco vacio de negras
+//   (unirse a la partida).
+// - No se permite borrar salas desde el cliente.
+//
+// Nota de alcance: dentro de esas reglas, un jugador ya sentado en la
+// partida podria en teoria sobreescribir cualquier campo del documento
+// (no solo su propia jugada). Es una limitacion aceptada a proposito para
+// mantener las reglas simples en una app de partidas privadas entre
+// amigos - no esta pensado para un matchmaking publico con desconocidos.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /ajedrez_rooms/{roomCode} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+                    && request.resource.data.players.white.uid == request.auth.uid;
+
+      allow update: if request.auth != null
+                    && (
+                         resource.data.players.white.uid == request.auth.uid ||
+                         (resource.data.players.black != null
+                           && resource.data.players.black.uid == request.auth.uid) ||
+                         (resource.data.players.black == null
+                           && request.resource.data.players.black.uid == request.auth.uid)
+                       );
+
+      allow delete: if false;
+    }
+
+    // Todo lo demas, denegado por defecto.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

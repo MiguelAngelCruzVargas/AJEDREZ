@@ -20,7 +20,7 @@
  * CACHE_VERSION - si no, seguirán viendo la caché vieja indefinidamente.
  */
 
-const CACHE_VERSION = 'ajedrez3d-v2';
+const CACHE_VERSION = 'ajedrez3d-v4';
 
 const APP_SHELL = [
     './',
@@ -30,6 +30,7 @@ const APP_SHELL = [
     './css/board-ui.css',
     './css/learning.css',
     './css/modal.css',
+    './css/online.css',
     './js/audio.js',
     './js/board.js',
     './js/effects.js',
@@ -38,6 +39,7 @@ const APP_SHELL = [
     './js/learning.js',
     './js/ui.js',
     './js/main.js',
+    './js/multiplayer.js',
     './js/ai-worker.js',
     './js/stockfish-worker.js',
     './assets/vendor/three.min.js',
@@ -45,6 +47,9 @@ const APP_SHELL = [
     './assets/vendor/tween.umd.js',
     './assets/vendor/chess.min.js',
     './assets/vendor/stockfish.min.js',
+    './assets/vendor/firebase/firebase-app.js',
+    './assets/vendor/firebase/firebase-auth.js',
+    './assets/vendor/firebase/firebase-firestore.js',
     './assets/card_ai.svg',
     './assets/card_pvp.svg',
     './assets/card_academy.svg',

@@ -93,7 +93,7 @@ const App = {
         const startOverlay = document.getElementById('start-overlay');
         const heroButtons = document.querySelectorAll('.btn-hero');
 
-        const launchGame = (mode) => {
+        this.launchGame = (mode) => {
             if (this.isCinematicIntroRunning) return;
             this.isCinematicIntroRunning = true;
             this.currentGameMode = mode;
@@ -124,6 +124,16 @@ const App = {
                 if (academyTab) academyTab.classList.add('active');
                 UIManager.pauseClock();
                 UIManager.openLearningDrawer();
+            } else if (mode === 'online') {
+                document.body.classList.remove('mode-pvp-active');
+                UIManager.setCleanPvPMode(false);
+                UIManager.setOnlineMode(true);
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                const gameTab = document.querySelector('.mode-tab[data-mode="game"]');
+                if (gameTab) gameTab.classList.add('active');
+                // Sin reloj sincronizado por ahora - ver MultiplayerManager.
+                UIManager.setTimeControl('none');
+                UIManager.resetClock();
             } else {
                 document.body.classList.remove('mode-pvp-active');
                 UIManager.setCleanPvPMode(false);
@@ -170,7 +180,15 @@ const App = {
         heroButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const mode = e.currentTarget.dataset.mode || 'ai';
-                launchGame(mode);
+                // El modo Online no arranca la partida al toque: primero hay
+                // que crear o unirse a una sala. MultiplayerManager llama a
+                // this.launchGame('online') en cuanto los dos jugadores están
+                // listos.
+                if (mode === 'online') {
+                    MultiplayerManager.openCreateJoinModal();
+                    return;
+                }
+                this.launchGame(mode);
             });
         });
     },
@@ -238,7 +256,7 @@ const App = {
             pointerDownTarget = this.getRaycastTarget(clientX, clientY);
 
             if (pointerDownTarget && pointerDownTarget.type === 'piece') {
-                if (pointerDownTarget.color === EngineManager.turn()) {
+                if (pointerDownTarget.color === EngineManager.turn() && this.canSelectColor(pointerDownTarget.color)) {
                     UIManager.selectedSquare = pointerDownTarget.square;
                     UIManager.validMoves = EngineManager.moves({ square: pointerDownTarget.square, verbose: true });
                     BoardManager.showValidMoves(UIManager.validMoves);
@@ -296,7 +314,7 @@ const App = {
 
             const moved = this.handlePlayerMoveAttempt(fromSquare, toSquare);
             if (!moved) {
-                if (upTarget.type === 'piece' && upTarget.color === EngineManager.turn()) {
+                if (upTarget.type === 'piece' && upTarget.color === EngineManager.turn() && this.canSelectColor(upTarget.color)) {
                     UIManager.selectedSquare = upTarget.square;
                     UIManager.validMoves = EngineManager.moves({ square: upTarget.square, verbose: true });
                     BoardManager.showValidMoves(UIManager.validMoves);
@@ -312,6 +330,16 @@ const App = {
 
         window.addEventListener('pointerdown', onPointerDown);
         window.addEventListener('pointerup', onPointerUp);
+    },
+
+    // En modo Online cada jugador solo puede tocar/mover sus propias piezas
+    // (las del color que le tocó al unirse a la sala) - en el resto de
+    // modos (IA, PvP local, academia, puzzles) no hay restricción extra.
+    canSelectColor: function (color) {
+        if (this.currentGameMode === 'online') {
+            return color === MultiplayerManager.myColor;
+        }
+        return true;
     },
 
     handlePlayerMoveAttempt: function (from, to) {

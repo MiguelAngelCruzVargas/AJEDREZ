@@ -274,6 +274,9 @@ const UIManager = {
                 AudioManager.playClick();
                 this.cancelPendingAIMove();
                 this.pauseClock();
+                if (App.currentGameMode === 'online') {
+                    MultiplayerManager.leaveRoom();
+                }
                 document.body.classList.add('menu-active');
                 const startOverlay = document.getElementById('start-overlay');
                 if (startOverlay) {
@@ -285,6 +288,7 @@ const UIManager = {
                 }
                 App.state = 'MENU';
                 this.setCleanPvPMode(false);
+                this.setOnlineMode(false);
             });
         }
 
@@ -321,6 +325,9 @@ const UIManager = {
         if (btnUndo) {
             btnUndo.addEventListener('click', () => {
                 if (EngineManager.isAITurn || this.pendingPromotion) return;
+                // En partidas online no se puede deshacer unilateralmente -
+                // el tablero es compartido con el rival.
+                if (App.currentGameMode === 'online') return;
                 AudioManager.playClick();
                 this.cancelPendingAIMove();
                 EngineManager.undo();
@@ -499,6 +506,33 @@ const UIManager = {
             if (diffSelect) diffSelect.style.display = 'inline-block';
             if (autoFlipBtn) autoFlipBtn.style.display = 'none';
         }
+    },
+
+    // Modo Online: parecido al PvP "limpio" (sin tutor IA ni dificultad),
+    // pero SIN el auto-giro de "pasar y jugar" (cada quien tiene su propia
+    // pantalla) y con Deshacer oculto (el tablero es compartido con el
+    // rival) a cambio de Rendirse/Ofrecer tablas.
+    setOnlineMode: function (isOnline) {
+        this.isPvPMode = isOnline;
+        const mainNavTabs = document.getElementById('main-nav-tabs');
+        const aiCoachCard = document.getElementById('ai-coach-card');
+        const lessonBanner = document.getElementById('lesson-banner');
+        const diffSelect = document.getElementById('difficulty-select');
+        const autoFlipBtn = document.getElementById('btn-autoflip');
+        const btnUndo = document.getElementById('btn-undo');
+        const onlineControls = document.querySelectorAll('.online-only-control');
+
+        if (isOnline) {
+            if (mainNavTabs) mainNavTabs.style.display = 'none';
+            if (aiCoachCard) aiCoachCard.style.display = 'none';
+            if (lessonBanner) lessonBanner.style.display = 'none';
+            if (diffSelect) diffSelect.style.display = 'none';
+            if (autoFlipBtn) autoFlipBtn.style.display = 'none';
+            if (btnUndo) btnUndo.style.display = 'none';
+        } else {
+            if (btnUndo) btnUndo.style.display = 'inline-flex';
+        }
+        onlineControls.forEach(el => { el.style.display = isOnline ? 'inline-flex' : 'none'; });
     },
 
     openLearningDrawer: function () {
@@ -904,6 +938,13 @@ const UIManager = {
     executeMove: function (from, to, promoPiece = 'q') {
         const move = EngineManager.move({ from, to, promotion: promoPiece });
         if (!move) return false;
+
+        // Modo Online: subir la jugada al rival, salvo que esta misma llamada
+        // sea la que está APLICANDO una jugada que ya llegó del rival (si no,
+        // se la reenviaríamos de vuelta en un bucle infinito).
+        if (App.currentGameMode === 'online' && !MultiplayerManager._isApplyingRemote) {
+            MultiplayerManager.pushMove(move);
+        }
 
         BoardManager.clearHighlights();
         EffectsManager.clearMoveArc();

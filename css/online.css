@@ -1,0 +1,146 @@
+/* ==========================================================================
+   ONLINE.CSS - Modal de Partida Online (crear/unirse a sala privada)
+   ========================================================================== */
+
+.online-choose-view {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.online-create-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    background: linear-gradient(135deg, var(--accent-gold-dark), var(--accent-gold));
+    border: 1px solid var(--accent-gold-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.online-create-btn:hover {
+    box-shadow: 0 0 25px var(--accent-gold-glow);
+    transform: translateY(-2px);
+}
+
+.online-create-btn-title {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #0b0f17;
+}
+
+.online-create-btn-sub {
+    font-size: 0.74rem;
+    color: rgba(11, 15, 23, 0.75);
+}
+
+.online-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.online-section-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    text-align: left;
+}
+
+.online-join-row {
+    display: flex;
+    gap: 8px;
+}
+
+.online-code-input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-family: var(--font-accent);
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.online-code-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 12px var(--accent-gold-glow);
+}
+
+.online-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 4px 0;
+}
+
+.online-divider::before,
+.online-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--panel-border);
+}
+
+.online-waiting-view {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.online-room-code {
+    font-family: var(--font-accent);
+    font-size: 2.2rem;
+    letter-spacing: 8px;
+    color: var(--text-gold);
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: var(--radius-md);
+    padding: 12px 18px;
+}
+
+.online-waiting-text {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.online-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--panel-border);
+    border-top-color: var(--accent-gold);
+    border-radius: 50%;
+    animation: online-spin 0.8s linear infinite;
+}
+
+@keyframes online-spin {
+    to { transform: rotate(360deg); }
+}
