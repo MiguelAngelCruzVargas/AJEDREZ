@@ -299,6 +299,15 @@ const UIManager = {
                 if (App.currentGameMode === 'online') {
                     MultiplayerManager.leaveRoom();
                 }
+                // Si se sale al menú sin cerrar antes una lección/escaparate
+                // (con su propio botón), hay que limpiar el modo igual - si
+                // no, quedaría "atascado" y bloquearía el tablero en la
+                // siguiente partida.
+                if (LearningManager.currentMode === 'showcase') {
+                    LearningManager.endPieceShowcase();
+                } else if (LearningManager.currentMode !== 'none') {
+                    LearningManager.endLearningSession();
+                }
                 document.body.classList.add('menu-active');
                 const startOverlay = document.getElementById('start-overlay');
                 if (startOverlay) {
@@ -415,6 +424,8 @@ const UIManager = {
                 LearningManager.showCurrentStepHint();
             } else if (LearningManager.currentMode === 'puzzle') {
                 LearningManager.showPuzzleHint();
+            } else if (LearningManager.currentMode === 'showcase') {
+                LearningManager.playPieceDemo();
             } else {
                 // Cálculo en segundo plano (Web Worker): la pista no congela la pantalla
                 const best = await EngineManager.findBestAIMoveAsync();
@@ -428,6 +439,16 @@ const UIManager = {
 
         if (btnHint) btnHint.addEventListener('click', triggerHint);
         if (btnBannerHint) btnBannerHint.addEventListener('click', triggerHint);
+
+        // Botón "✕" del banner: solo se ve en la vista ampliada de una pieza
+        // ("Conoce las Piezas"), para volver al tablero normal.
+        const btnBannerClose = document.getElementById('btn-banner-close');
+        if (btnBannerClose) {
+            btnBannerClose.addEventListener('click', () => {
+                AudioManager.playClick();
+                LearningManager.endPieceShowcase();
+            });
+        }
 
         // Botón Ocultar / Mostrar Rastro de Movimientos
         const btnTrail = document.getElementById('btn-trail');
@@ -579,7 +600,7 @@ const UIManager = {
                 <div class="category-title">Conoce las Piezas</div>
                 <div class="piece-guide-grid">
                     ${LearningManager.pieceGuide.map(p => `
-                        <div class="piece-guide-card">
+                        <div class="piece-guide-card" data-piece-key="${p.key}" title="Toca para ver la pieza en grande y su demo">
                             <div class="piece-guide-glyph">${p.glyph}</div>
                             <div class="piece-guide-name">
                                 <span>${p.name}</span>
@@ -624,6 +645,13 @@ const UIManager = {
                 const lessonId = e.currentTarget.dataset.lessonId;
                 this.closeLearningDrawer();
                 LearningManager.startLesson(lessonId);
+            });
+        });
+
+        container.querySelectorAll('.piece-guide-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const key = e.currentTarget.dataset.pieceKey;
+                LearningManager.startPieceShowcase(key);
             });
         });
 

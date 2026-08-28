@@ -7,7 +7,7 @@
 const ACADEMY_PROGRESS_KEY = 'ajedrez3d_leccionesCompletadas';
 
 const LearningManager = {
-    currentMode: 'none', // 'lesson', 'puzzle', 'live-coach'
+    currentMode: 'none', // 'lesson', 'puzzle', 'showcase', 'live-coach'
     activeLesson: null,
     activeLessonStep: 0,
     activePuzzle: null,
@@ -15,6 +15,8 @@ const LearningManager = {
     puzzleStreak: 0,
     puzzleScore: 0,
     completedLessons: [], // ids de lecciones terminadas, persistido en este navegador
+    showcasePiece: null, // ficha activa en la vista ampliada de "Conoce las Piezas"
+    _demoPlaying: false,
 
     loadLessonProgress: function() {
         try {
@@ -46,48 +48,75 @@ const LearningManager = {
     // es la introducción antes de practicar el movimiento de cada una en las
     // lecciones de "Fundamentos".
     // ==========================================================================
+    // demoFen/demoMoves: posición y secuencia de saltos (verificados uno a
+    // uno con el motor) que se animan solas sobre el tablero 3D principal
+    // al presionar "Ver Demo" en la vista ampliada de cada pieza.
     pieceGuide: [
         {
+            key: 'king',
             glyph: '♔',
             name: 'Rey',
             value: 'Invaluable',
             role: 'La pieza que hay que proteger siempre. Si la dejan en jaque mate, pierdes la partida.',
-            moves: 'Se mueve una sola casilla en cualquier dirección (horizontal, vertical o diagonal).'
+            moves: 'Se mueve una sola casilla en cualquier dirección (horizontal, vertical o diagonal).',
+            history: 'Desde que se consolidaron las reglas modernas en Europa (siglo XV), el rey apenas ataca, pero protegerlo es el objetivo de cada jugada de la partida.',
+            demoFen: '8/8/8/8/8/8/8/4K3 w - - 0 1',
+            demoMoves: [{ from: 'e1', to: 'e2' }, { from: 'e2', to: 'f2' }, { from: 'f2', to: 'f3' }, { from: 'f3', to: 'e3' }]
         },
         {
+            key: 'queen',
             glyph: '♕',
             name: 'Dama',
             value: '9 puntos',
             role: 'La pieza más poderosa del tablero: combina el alcance de la torre y el alfil.',
-            moves: 'Se mueve en línea recta o en diagonal, tantas casillas como quieras.'
+            moves: 'Se mueve en línea recta o en diagonal, tantas casillas como quieras.',
+            history: 'Hasta el siglo XV solo avanzaba una casilla en diagonal, una de las piezas más débiles del tablero. Su alcance actual nació en la reforma española de finales del 1400 y cambió el juego para siempre.',
+            demoFen: '8/8/8/8/8/8/8/4Q3 w - - 0 1',
+            demoMoves: [{ from: 'e1', to: 'e8' }, { from: 'e8', to: 'a8' }, { from: 'a8', to: 'h1' }, { from: 'h1', to: 'h8' }]
         },
         {
+            key: 'rook',
             glyph: '♖',
             name: 'Torre',
             value: '5 puntos',
             role: 'Clave en los finales de partida y en el enroque con el rey.',
-            moves: 'Se mueve en línea recta, horizontal o vertical, cualquier número de casillas.'
+            moves: 'Se mueve en línea recta, horizontal o vertical, cualquier número de casillas.',
+            history: 'Su nombre en español ("torre") y el del enroque vienen del persa "rukh" - una torre de guerra sobre un elefante - que pasó al árabe y de ahí a las lenguas europeas.',
+            demoFen: '8/8/8/8/8/8/8/4R3 w - - 0 1',
+            demoMoves: [{ from: 'e1', to: 'e5' }, { from: 'e5', to: 'a5' }, { from: 'a5', to: 'a8' }, { from: 'a8', to: 'h8' }]
         },
         {
+            key: 'bishop',
             glyph: '♗',
             name: 'Alfil',
             value: '3 puntos',
             role: 'Cada bando tiene dos: uno de casillas claras y otro de oscuras.',
-            moves: 'Se desliza en diagonal, siempre por casillas del mismo color.'
+            moves: 'Se desliza en diagonal, siempre por casillas del mismo color.',
+            history: 'En el ajedrez original hindú (chaturanga) esta pieza representaba un elefante de guerra y solo saltaba dos casillas en diagonal - su recorrido largo actual es otra herencia de la reforma del siglo XV.',
+            demoFen: '8/8/8/8/8/8/8/4B3 w - - 0 1',
+            demoMoves: [{ from: 'e1', to: 'a5' }, { from: 'a5', to: 'd8' }, { from: 'd8', to: 'h4' }, { from: 'h4', to: 'f2' }]
         },
         {
+            key: 'knight',
             glyph: '♘',
             name: 'Caballo',
             value: '3 puntos',
             role: 'La única pieza capaz de saltar por encima de las demás.',
-            moves: 'Se mueve en forma de "L": dos casillas en una dirección y una en perpendicular.'
+            moves: 'Se mueve en forma de "L": dos casillas en una dirección y una en perpendicular.',
+            history: 'Es herencia directa del caballo de guerra del chaturanga (India), la versión más antigua conocida del ajedrez.',
+            demoFen: '8/8/8/8/8/8/8/4N3 w - - 0 1',
+            demoMoves: [{ from: 'e1', to: 'd3' }, { from: 'd3', to: 'e5' }, { from: 'e5', to: 'g6' }, { from: 'g6', to: 'e7' }]
         },
         {
+            key: 'pawn',
             glyph: '♙',
             name: 'Peón',
             value: '1 punto',
             role: 'El más numeroso (8 por bando). Si llega a la última fila, corona y se convierte en otra pieza.',
-            moves: 'Avanza una casilla al frente (dos en su primer movimiento) y captura en diagonal.'
+            moves: 'Avanza una casilla al frente (dos en su primer movimiento) y captura en diagonal.',
+            history: 'El más humilde de todos, pero el único que puede transformarse: si corona en la última fila, puede convertirse incluso en una segunda dama.',
+            demoFen: '8/8/8/3p4/8/8/4P3/8 w - - 0 1',
+            demoMoves: [{ from: 'e2', to: 'e4' }, { from: 'e4', to: 'd5' }]
         }
     ],
 
@@ -845,6 +874,111 @@ const LearningManager = {
             msgEl.style.opacity = '0';
             setTimeout(() => msgEl.style.opacity = '1', 50);
         }
+    },
+
+    // ==========================================================================
+    // VISTA AMPLIADA DE UNA PIEZA ("Conoce las Piezas" -> click en una tarjeta)
+    // ==========================================================================
+    // Deja esa pieza sola sobre el tablero 3D principal, acerca la cámara y
+    // muestra su ficha completa (nombre, para qué sirve, cómo se mueve, un
+    // poco de historia) en el mismo banner que usan las lecciones - con un
+    // botón "Ver Demo" que anima unos saltos de ejemplo solos, sin que el
+    // usuario tenga que mover nada.
+    startPieceShowcase: function(key) {
+        const piece = this.pieceGuide.find(p => p.key === key);
+        if (!piece) return;
+
+        UIManager.closeLearningDrawer();
+        this.currentMode = 'showcase';
+        this.showcasePiece = piece;
+        this._demoPlaying = false;
+
+        UIManager.cancelPendingAIMove();
+        EngineManager.reset(piece.demoFen);
+        BoardManager.renderBoardPieces(EngineManager.board());
+        BoardManager.clearHighlights();
+        BoardManager.clearCheckAlert();
+        EffectsManager.clearMoveArc();
+        EffectsManager.clearTrainingGems();
+
+        const statusIndicator = document.getElementById('status-indicator');
+        if (statusIndicator) statusIndicator.style.display = 'none';
+
+        // Vista panorámica completa (no la cercana "dramática"): los saltos
+        // de la demo recorren buena parte del tablero, y con la cámara muy
+        // acercada la flecha o el destino del salto quedaban fuera de cuadro.
+        BoardManager.setCameraView('standard');
+
+        this.updateShowcaseBanner();
+        AudioManager.playClick();
+    },
+
+    updateShowcaseBanner: function() {
+        const banner = document.getElementById('lesson-banner');
+        if (!banner || !this.showcasePiece) return;
+        const p = this.showcasePiece;
+
+        banner.style.display = 'block';
+        banner.querySelector('.banner-step-title').textContent = `${p.glyph} ${p.name} · ${p.value}`;
+        banner.querySelector('.banner-step-instruction').textContent = `${p.role} ${p.moves} ${p.history}`;
+
+        const hintBtn = document.getElementById('btn-banner-hint');
+        if (hintBtn) hintBtn.innerHTML = '▶️ Ver Demo';
+        const closeBtn = document.getElementById('btn-banner-close');
+        if (closeBtn) closeBtn.style.display = 'flex';
+    },
+
+    // Anima en el tablero real, sin intervención del usuario, la secuencia
+    // de saltos de ejemplo de la pieza en escaparate. Cada salto se explica
+    // en dos tiempos - primero se dibuja la flecha del recorrido (igual que
+    // la pista de una lección) y solo DESPUÉS, con la ruta ya clara, se
+    // ejecuta el salto real - en vez de simplemente teletransportar la
+    // pieza de golpe sin ninguna explicación previa.
+    playPieceDemo: async function() {
+        if (!this.showcasePiece || this._demoPlaying) return;
+        this._demoPlaying = true;
+
+        EngineManager.reset(this.showcasePiece.demoFen);
+        BoardManager.renderBoardPieces(EngineManager.board());
+        BoardManager.clearHighlights();
+        EffectsManager.clearMoveArc();
+
+        for (const move of this.showcasePiece.demoMoves) {
+            // Si se cerró el escaparate a mitad de la demo, no seguir.
+            if (this.currentMode !== 'showcase') break;
+
+            // 1. Mostrar primero hacia dónde va a saltar.
+            EffectsManager.drawMoveArc(move.from, move.to, 0xf5cf70);
+            AudioManager.playHint();
+            await new Promise((resolve) => setTimeout(resolve, 900));
+            if (this.currentMode !== 'showcase') break;
+
+            // 2. Ahora sí, el salto real.
+            EffectsManager.clearMoveArc();
+            const moverColor = EngineManager.turn();
+            UIManager.executeMove(move.from, move.to, move.promotion || 'q');
+            // Igual que en las lecciones de una sola pieza: devolver el
+            // turno al mismo bando para que el siguiente salto sea legal.
+            this._forceTurn(moverColor);
+            await new Promise((resolve) => setTimeout(resolve, 1100));
+        }
+
+        EffectsManager.clearMoveArc();
+
+        this._demoPlaying = false;
+    },
+
+    endPieceShowcase: function() {
+        this.showcasePiece = null;
+        this._demoPlaying = false;
+
+        const hintBtn = document.getElementById('btn-banner-hint');
+        if (hintBtn) hintBtn.innerHTML = '💡 Ver Pista 3D';
+        const closeBtn = document.getElementById('btn-banner-close');
+        if (closeBtn) closeBtn.style.display = 'none';
+
+        BoardManager.setCameraView('standard');
+        this.endLearningSession();
     },
 
     endLearningSession: function() {

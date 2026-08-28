@@ -751,10 +751,23 @@ const BoardManager = {
             .start();
     },
 
+    // Detiene cualquier tween de cámara en curso (p. ej. si se abre el
+    // escaparate de una pieza mientras la cinemática de entrada todavía
+    // está volando la cámara hacia su posición final) para que no compitan
+    // dos animaciones por la misma posición al mismo tiempo.
+    stopCameraTweens: function() {
+        TWEEN.getAll().forEach((t) => {
+            if (t._object === this.camera.position || t._object === this.controls.target) {
+                TWEEN.remove(t);
+            }
+        });
+    },
+
     // =========================================================================
     // MODOS DE CÁMARA CINEMÁTICA Y DIRECTOR
     // =========================================================================
     setCameraView: function(mode) {
+        this.stopCameraTweens();
         AudioManager.playCameraTransition();
 
         const f = this.getResponsiveCameraDistanceFactor();

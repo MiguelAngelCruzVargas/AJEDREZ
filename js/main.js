@@ -242,7 +242,7 @@ const App = {
         let startY = 0;
 
         const onPointerDown = (event) => {
-            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning) {
+            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning || LearningManager.currentMode === 'showcase') {
                 return;
             }
 
@@ -278,7 +278,7 @@ const App = {
         };
 
         const onPointerUp = (event) => {
-            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning) {
+            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning || LearningManager.currentMode === 'showcase') {
                 return;
             }
 
