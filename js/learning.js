@@ -103,7 +103,10 @@ const LearningManager = {
             description: 'Aprende el movimiento en "L" del caballo recolectando gemas luminosas.',
             badge: 'Básico',
             fen: '8/8/8/8/8/8/8/4N3 w - - 0 1', // Caballo en e1
-            gems: ['d3', 'f5', 'e7', 'c6'],
+            // Antes tenía d3->f5 como segundo salto, que NO es un movimiento
+            // de caballo válido (2+2 en vez de 1+2) - con eso el reto era
+            // imposible de completar. Ruta nueva verificada salto a salto.
+            gems: ['d3', 'e5', 'g6', 'e7'],
             steps: [
                 {
                     instruction: 'Mueve tu Caballo a d3 para recoger la primera gema.',
@@ -112,21 +115,21 @@ const LearningManager = {
                     explanation: '¡Genial! El caballo salta dos casillas en una dirección y una en perpendicular.'
                 },
                 {
-                    instruction: 'Ahora salta con tu Caballo a f5.',
-                    expectedMove: { from: 'd3', to: 'f5' },
-                    hintFrom: 'd3', hintTo: 'f5',
+                    instruction: 'Ahora salta con tu Caballo a e5, hacia el centro.',
+                    expectedMove: { from: 'd3', to: 'e5' },
+                    hintFrom: 'd3', hintTo: 'e5',
                     explanation: '¡Excelente! El caballo es la única pieza capaz de saltar sobre otras piezas.'
                 },
                 {
-                    instruction: 'Salta a e7 para capturar la tercera gema.',
-                    expectedMove: { from: 'f5', to: 'e7' },
-                    hintFrom: 'f5', hintTo: 'e7',
+                    instruction: 'Salta a g6 para capturar la tercera gema.',
+                    expectedMove: { from: 'e5', to: 'g6' },
+                    hintFrom: 'e5', hintTo: 'g6',
                     explanation: '¡Perfecto! Dominas las bifurcaciones y esquinas del caballo.'
                 },
                 {
-                    instruction: 'Completa el entrenamiento saltando a c6.',
-                    expectedMove: { from: 'e7', to: 'c6' },
-                    hintFrom: 'e7', hintTo: 'c6',
+                    instruction: 'Completa el entrenamiento saltando a e7.',
+                    expectedMove: { from: 'g6', to: 'e7' },
+                    hintFrom: 'g6', hintTo: 'e7',
                     explanation: '¡Reto completado! El caballo siempre cambia el color de su casilla en cada salto.'
                 }
             ]
@@ -645,9 +648,26 @@ const LearningManager = {
         }
     },
 
+    // Reescribe el turno actual del motor sin tocar la posición de las
+    // piezas - se usa para las lecciones de una sola pieza (ver más abajo).
+    // También limpia el objetivo de "captura al paso": si el paso anterior
+    // fue el avance doble de un peón, ese campo del FEN queda apuntando al
+    // bando contrario y chess.js RECHAZA cargar un FEN con un objetivo de
+    // al paso que no coincide con el turno forzado.
+    _forceTurn: function(color) {
+        const parts = EngineManager.game.fen().split(' ');
+        parts[1] = color;
+        parts[3] = '-';
+        EngineManager.game.load(parts.join(' '));
+    },
+
     handleLessonMove: function(from, to) {
         if (!this.activeLesson) return false;
         const step = this.activeLesson.steps[this.activeLessonStep];
+        // Color de quien hace esta jugada - se necesita más abajo para
+        // devolverle el turno a la misma pieza en el siguiente paso (ver
+        // _forceTurn), ya que EngineManager.move() lo cambia automáticamente.
+        const moverColor = EngineManager.turn();
 
         if (step.expectedMove.from === from && step.expectedMove.to === to) {
             // Movimiento Correcto
@@ -684,6 +704,14 @@ const LearningManager = {
                         EngineManager.move(step.autoResponse);
                         BoardManager.renderBoardPieces(EngineManager.board());
                         AudioManager.playMove(BoardManager.squaresMap[step.autoResponse.to].position);
+                    } else {
+                        // Sin rival que responda (lecciones de una sola pieza:
+                        // caballo, torre, alfil, dama, peón): el motor de
+                        // ajedrez alterna el turno tras CUALQUIER jugada real,
+                        // así que sin esto la misma pieza quedaría "congelada"
+                        // - imposible de volver a seleccionar - en cuanto se
+                        // completa el primer paso.
+                        this._forceTurn(moverColor);
                     }
                     this.updateLessonBanner();
                     this.showCurrentStepHint();
