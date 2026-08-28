@@ -165,8 +165,10 @@ const App = {
                 .to({ x: 12, y: 8, z: 12 }, 1200)
                 .easing(TWEEN.Easing.Cubic.InOut)
                 .onComplete(() => {
+                    const f = BoardManager.getResponsiveCameraDistanceFactor();
+                    BoardManager._lastCameraDistanceFactor = f;
                     new TWEEN.Tween(BoardManager.camera.position)
-                        .to({ x: 0, y: 24, z: 9 }, 1400)
+                        .to({ x: 0, y: 19 * f, z: 7.1 * f }, 1400)
                         .easing(TWEEN.Easing.Cubic.Out)
                         .onComplete(() => {
                             BoardManager.controls.enabled = true;

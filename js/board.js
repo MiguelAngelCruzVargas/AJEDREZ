@@ -67,7 +67,16 @@ const BoardManager = {
         // Ángulo más cenital que el original (0,19,18): con esa inclinación las
         // piezas altas de la fila trasera (más cerca de la cámara) tapaban a los
         // peones detrás de ellas, sobre todo con el tablero completo (aperturas).
-        this.camera.position.set(0, 24, 9);
+        // Mismo ángulo que antes (y:z ≈ 2.7:1) pero más cerca, para que el
+        // tablero sea el protagonista de la pantalla en vez de verse pequeño
+        // en medio de tanto fondo estrellado. La distancia real se escala con
+        // getResponsiveCameraDistanceFactor() - en ventanas bajas (portátiles
+        // en horizontal, pantallas panorámicas cortas) la barra de controles
+        // fija de abajo ocupa un % mayor de la pantalla, así que hay que
+        // alejar un poco la cámara para que no tape la fila de piezas.
+        this._lastCameraDistanceFactor = this.getResponsiveCameraDistanceFactor();
+        const f0 = this._lastCameraDistanceFactor;
+        this.camera.position.set(0, 19 * f0, 7.1 * f0);
 
         // 3. Renderer WebGL con tone mapping fílmico y sombras suaves
         this.renderer = new THREE.WebGLRenderer({
@@ -748,10 +757,13 @@ const BoardManager = {
     setCameraView: function(mode) {
         AudioManager.playCameraTransition();
 
+        const f = this.getResponsiveCameraDistanceFactor();
+        this._lastCameraDistanceFactor = f;
+
         if (mode === 'top') {
             // Cenital Táctica 2D/3D
             new TWEEN.Tween(this.camera.position)
-                .to({ x: 0, y: 23, z: 0.1 }, 1000)
+                .to({ x: 0, y: 18.2 * f, z: 0.1 }, 1000)
                 .easing(TWEEN.Easing.Cubic.InOut)
                 .start();
             new TWEEN.Tween(this.controls.target)
@@ -780,9 +792,10 @@ const BoardManager = {
                 .start();
         } else {
             // Panorámica (por defecto): más cenital para que las piezas de la
-            // fila trasera no tapen a los peones detrás de ellas.
+            // fila trasera no tapen a los peones detrás de ellas, y cerca para
+            // que el tablero sea el protagonista de la pantalla.
             new TWEEN.Tween(this.camera.position)
-                .to({ x: 0, y: 24, z: 9 }, 1000)
+                .to({ x: 0, y: 19 * f, z: 7.1 * f }, 1000)
                 .easing(TWEEN.Easing.Cubic.InOut)
                 .start();
             new TWEEN.Tween(this.controls.target)
@@ -874,11 +887,33 @@ const BoardManager = {
         this.onResize();
     },
 
+    // Cuánto alejar la cámara respecto a la distancia "de diseño" según la
+    // altura de la ventana. 1 = sin cambio (ventanas altas/normales); sube
+    // hasta 1.35 en ventanas bajas para que la barra de controles (altura
+    // fija en píxeles) no termine tapando la fila de piezas más cercana.
+    getResponsiveCameraDistanceFactor: function() {
+        const referenceHeight = 820; // altura donde el tablero se ve "a tamaño"
+        const minHeight = 560;       // por debajo de esto no se aleja más
+        const maxFactor = 1.35;
+        const h = Math.max(minHeight, Math.min(referenceHeight, window.innerHeight));
+        return 1 + (referenceHeight - h) / (referenceHeight - minHeight) * (maxFactor - 1);
+    },
+
     onResize: function() {
         if (!this.camera || !this.renderer) return;
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Si la altura de la ventana cambió lo suficiente (girar una
+        // tablet, cambiar de ventana...), reescalar la distancia de la
+        // cámara mantiene la misma dirección/zoom que ya tenía el usuario.
+        const newFactor = this.getResponsiveCameraDistanceFactor();
+        if (Math.abs(newFactor - this._lastCameraDistanceFactor) > 0.01) {
+            const scale = newFactor / this._lastCameraDistanceFactor;
+            this.camera.position.multiplyScalar(scale);
+            this._lastCameraDistanceFactor = newFactor;
+        }
     }
 };
 
