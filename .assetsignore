@@ -1,0 +1,8 @@
+# Cloudflare Workers (static assets): archivos que NO deben servirse como
+# parte del sitio publicado, aunque vivan en el repo. Sintaxis tipo .gitignore.
+
+.git
+.gitignore
+.firebaserc
+firebase.json
+firestore.rules
