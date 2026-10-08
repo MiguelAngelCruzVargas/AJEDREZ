@@ -147,9 +147,14 @@ const AudioManager = {
     // Orientación de la cámara 3D para el paneo binaural
     updateListener: function(camera) {
         if (!this.ctx || !camera) return;
+        // Se llamaba en cada frame (60/s) creando un Vector3 y 9 llamadas al
+        // AudioParam; con ~10 actualizaciones/s el paneo suena igual.
+        const now = performance.now();
+        if (now - (this._lastListenerUpdate || 0) < 100) return;
+        this._lastListenerUpdate = now;
         try {
             const listener = this.ctx.listener;
-            const dir = new THREE.Vector3();
+            const dir = this._listenerDir || (this._listenerDir = new THREE.Vector3());
             camera.getWorldDirection(dir);
             const p = camera.position;
             const t = this.ctx.currentTime;

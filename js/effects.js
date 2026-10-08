@@ -66,8 +66,9 @@ const EffectsManager = {
 
     // Destello de impacto cinemático al capturar una pieza
     createCaptureExplosion: function(pos, isWhite) {
-        const count = 30;
-        const geo = new THREE.SphereGeometry(0.08, 12, 12);
+        const q = BoardManager.graphicsQuality;
+        const count = q === 'low' ? 10 : (q === 'medium' ? 18 : 30);
+        const geo = new THREE.SphereGeometry(0.08, 8, 8);
         const mat = new THREE.MeshBasicMaterial({
             color: isWhite ? 0xf8fafc : 0xdfb445,
             transparent: true,
@@ -97,6 +98,8 @@ const EffectsManager = {
             .easing(TWEEN.Easing.Quadratic.Out)
             .onComplete(() => {
                 BoardManager.scene.remove(shockwave);
+                ringGeo.dispose();
+                ringMat.dispose();
             })
             .start();
 

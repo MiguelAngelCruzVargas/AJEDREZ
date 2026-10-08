@@ -44,6 +44,18 @@ const BoardManager = {
     // Materiales
     materials: {},
 
+    // Primera visita: celulares/tablets y equipos con poca CPU arrancan en
+    // calidad Media o Baja en vez de Ultra (sombras 2048 + pixel ratio 2).
+    detectDefaultQuality: function() {
+        const cores = navigator.hardwareConcurrency || 4;
+        const mem = navigator.deviceMemory || 4;
+        const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+            (navigator.maxTouchPoints > 1 && Math.min(screen.width, screen.height) < 900);
+        if (cores <= 4 && mem <= 2) return 'low';
+        if (mobile || cores <= 4) return 'medium';
+        return 'ultra';
+    },
+
     init: function(containerId) {
         this.container = document.getElementById(containerId);
         
@@ -51,7 +63,10 @@ const BoardManager = {
         try {
             const savedQuality = localStorage.getItem('ajedrez3d_graphics_quality');
             if (savedQuality) this.graphicsQuality = savedQuality;
-        } catch(e) {}
+            else this.graphicsQuality = this.detectDefaultQuality();
+        } catch(e) {
+            this.graphicsQuality = this.detectDefaultQuality();
+        }
 
         // 1. Escena 3D
         this.scene = new THREE.Scene();
@@ -386,7 +401,7 @@ const BoardManager = {
     },
 
     applyRealism: function() {
-        const size = this.graphicsQuality === 'low' ? 256 : 512;
+        const size = this.graphicsQuality === 'ultra' ? 512 : 256;
         const m = this.materials;
 
         m.lightSquare.map = this.makeProceduralTexture('marble', size);
@@ -515,7 +530,20 @@ const BoardManager = {
     },
 
     // Modelado Esculpido de Piezas con Detalles de Orfebrería Dorada
+    // Cada pieza se modela UNA sola vez (por tipo y color) y luego se clona:
+    // clone() comparte geometrias y materiales. Antes se creaban ~32 mallas
+    // nuevas (con esferas de 32x32) tras CADA jugada y nunca se liberaban:
+    // tirones y memoria de GPU creciendo durante la partida.
     createPieceGeometry: function(type, isWhite) {
+        const key = type + (isWhite ? 'w' : 'b');
+        this._pieceTemplates = this._pieceTemplates || {};
+        if (!this._pieceTemplates[key]) {
+            this._pieceTemplates[key] = this._buildPieceGeometry(type, isWhite);
+        }
+        return this._pieceTemplates[key].clone();
+    },
+
+    _buildPieceGeometry: function(type, isWhite) {
         const group = new THREE.Group();
         const mat = isWhite ? this.materials.whitePiece : this.materials.blackPiece;
         const goldMat = this.materials.goldAccent;
