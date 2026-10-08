@@ -1303,3 +1303,59 @@ body.menu-active #bottom-bar {
         min-width: 52px;
     }
 }
+
+/* --------------------------------------------------------------------------
+   MOVIL: ajustes finos (toques, modales, horizontal)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    button, .ctrl-btn, .mode-tab, .time-preset-btn, select {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-icon {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .ctrl-btn {
+        min-height: 40px;
+    }
+
+    .game-controls-bar {
+        max-width: calc(100vw - 16px);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .game-controls-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .modal-card, .settings-modal-card {
+        max-width: calc(100vw - 24px);
+        max-height: 88vh;
+        max-height: 88dvh;
+        overflow-y: auto;
+        padding: 22px 18px;
+    }
+}
+
+/* Celular en horizontal: poca altura, compactar */
+@media (max-height: 480px) and (orientation: landscape) {
+    #ui-layer {
+        padding-top: max(4px, env(safe-area-inset-top));
+        padding-bottom: max(4px, env(safe-area-inset-bottom));
+    }
+
+    .ctrl-btn {
+        min-height: 32px;
+        padding: 4px 8px;
+    }
+
+    #options-dropdown {
+        max-height: 80vh;
+    }
+}

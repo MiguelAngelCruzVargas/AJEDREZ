@@ -135,6 +135,7 @@ const BoardManager = {
 
         // 9. Evento Resize
         window.addEventListener('resize', () => this.onResize());
+        window.addEventListener('orientationchange', () => setTimeout(() => this.onResize(), 250));
     },
 
     setupEnvironment: function(themeKey) {
@@ -909,7 +910,13 @@ const BoardManager = {
         const minHeight = 560;       // por debajo de esto no se aleja más
         const maxFactor = 1.35;
         const h = Math.max(minHeight, Math.min(referenceHeight, window.innerHeight));
-        return 1 + (referenceHeight - h) / (referenceHeight - minHeight) * (maxFactor - 1);
+        const heightFactor = 1 + (referenceHeight - h) / (referenceHeight - minHeight) * (maxFactor - 1);
+        // En celulares verticales el ancho manda: con FOV vertical fijo, una
+        // pantalla estrecha recortaria las columnas a/h. Alejamos la camara
+        // hasta que el tablero (8 casillas + margen) quepa a lo ancho.
+        const aspect = window.innerWidth / window.innerHeight;
+        const widthFactor = Math.min(2.2, Math.max(1, 0.8 / aspect));
+        return Math.max(heightFactor, widthFactor);
     },
 
     onResize: function() {

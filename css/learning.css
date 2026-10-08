@@ -377,3 +377,34 @@
     color: var(--accent-blue);
     font-weight: 600;
 }
+
+
+/* --------------------------------------------------------------------------
+   MOVIL: la Academia pasa a panel inferior a todo el ancho
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    #learning-drawer {
+        top: auto;
+        left: 8px;
+        right: 8px;
+        bottom: -110%;
+        width: auto;
+        height: 62vh;
+        height: 62dvh;
+        transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #learning-drawer.open {
+        right: 8px;
+        bottom: max(8px, env(safe-area-inset-bottom));
+    }
+
+    .drawer-header {
+        padding: 12px 14px;
+    }
+
+    .drawer-content {
+        padding: 12px 14px;
+        -webkit-overflow-scrolling: touch;
+    }
+}
