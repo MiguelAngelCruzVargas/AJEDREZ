@@ -20,7 +20,7 @@
  * CACHE_VERSION - si no, seguirán viendo la caché vieja indefinidamente.
  */
 
-const CACHE_VERSION = 'ajedrez3d-v12';
+const CACHE_VERSION = 'ajedrez3d-v13';
 
 const APP_SHELL = [
     './',

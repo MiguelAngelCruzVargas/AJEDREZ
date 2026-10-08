@@ -198,6 +198,106 @@ const BoardManager = {
         this.scene.add(this.fillLight);
     },
 
+    initMaterials: function() {
+        // Casillas Claras: Mármol satinado (antideslumbrante, con reflejo fino no cegador)
+        this.materials.lightSquare = new THREE.MeshPhysicalMaterial({
+            color: 0xcdd1da,
+            metalness: 0.05,
+            roughness: 0.4
+        });
+
+        // Casillas Oscuras: Ébano azul medianoche profundo
+        this.materials.darkSquare = new THREE.MeshPhysicalMaterial({
+            color: 0x161e2e,
+            metalness: 0.2,
+            roughness: 0.38
+        });
+
+        // Base y bordes de madera noble y oro pulido
+        this.materials.boardBase = new THREE.MeshPhysicalMaterial({
+            color: 0x090c12,
+            metalness: 0.4,
+            roughness: 0.45,
+            clearcoat: 0.4
+        });
+
+        this.materials.boardBorder = new THREE.MeshPhysicalMaterial({
+            color: 0xd4af37,
+            metalness: 0.88,
+            roughness: 0.22,
+            clearcoat: 0.9,
+            emissive: 0x281c04,
+            emissiveIntensity: 0.2
+        });
+
+        // Acentos dorados metálicos para detalles de piezas y bordes
+        this.materials.goldAccent = new THREE.MeshPhysicalMaterial({
+            color: 0xdfb542,
+            metalness: 0.92,
+            roughness: 0.18,
+            clearcoat: 0.95,
+            clearcoatRoughness: 0.1
+        });
+
+        // =====================================================================
+        // PIEZAS BLANCAS: Marfil Imperial / Mármol Perlado 100% SÓLIDO
+        // (Sin transparencia, bordes nítidos y relieve tridimensional definido)
+        // =====================================================================
+        this.materials.whitePiece = new THREE.MeshPhysicalMaterial({
+            color: 0xdfe2e8,
+            metalness: 0.08,
+            roughness: 0.3,
+            transmission: 0.0, // Cero transparencia para máxima nitidez
+            transparent: false,
+            opacity: 1.0,
+            clearcoat: 0.65,
+            clearcoatRoughness: 0.22,
+            reflectivity: 0.6
+        });
+
+        // =====================================================================
+        // PIEZAS NEGRAS: Obsidiana Real / Titanio Oscuro con reflejos áureos
+        // =====================================================================
+        this.materials.blackPiece = new THREE.MeshPhysicalMaterial({
+            color: 0x161a24,
+            metalness: 0.72,
+            roughness: 0.28,
+            clearcoat: 0.85,
+            clearcoatRoughness: 0.18,
+            emissive: 0x241a08,
+            emissiveIntensity: 0.2
+        });
+
+        // Materiales de Guías y Alertas
+        this.materials.validMove = new THREE.MeshBasicMaterial({
+            color: 0x38bdf8,
+            transparent: true,
+            opacity: 0.65,
+            side: THREE.DoubleSide
+        });
+
+        this.materials.lastMove = new THREE.MeshBasicMaterial({
+            color: 0xd4af37,
+            transparent: true,
+            opacity: 0.38,
+            side: THREE.DoubleSide
+        });
+
+        this.materials.selectedSquare = new THREE.MeshBasicMaterial({
+            color: 0x10b981,
+            transparent: true,
+            opacity: 0.5,
+            side: THREE.DoubleSide
+        });
+
+        this.materials.checkAlert = new THREE.MeshBasicMaterial({
+            color: 0xf43f5e,
+            transparent: true,
+            opacity: 0.75,
+            side: THREE.DoubleSide
+        });
+    },
+
     // =========================================================================
     // REALISMO: entorno de estudio, texturas procedurales y mesa
     // =========================================================================
