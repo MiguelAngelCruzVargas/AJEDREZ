@@ -32,6 +32,9 @@ const App = {
 
         // 4. Iniciar bucle de renderizado 3D
         this.animate();
+
+        // El audio se prepara con la pantalla ya pintada (ver AudioManager.prepare)
+        setTimeout(() => AudioManager.prepare(), 1500);
     },
 
     // Desbloqueo de AudioContext en el primer toque/clic, y arranque de la
@@ -172,10 +175,7 @@ const App = {
                         .to({ x: 0, y: 19 * f, z: 7.1 * f }, 1400)
                         .easing(TWEEN.Easing.Cubic.Out)
                         .onComplete(() => {
-                            BoardManager.controls.enabled = true;
-                            this.isCinematicIntroRunning = false;
-                            document.body.classList.remove('intro-running');
-                            BoardManager.renderer.shadowMap.needsUpdate = true;
+                            this.finishIntro();
                         })
                         .start();
                 })
@@ -196,6 +196,17 @@ const App = {
                 this.launchGame(mode);
             });
         });
+    },
+
+    // Fin de la cinematica de entrada. Tambien lo llama BoardManager.stopCameraTweens
+    // si otra vista de camara la interrumpe: sin esto el tween nunca llega a su
+    // onComplete y el tablero se queda bloqueado (no deja mover piezas).
+    finishIntro: function () {
+        if (!this.isCinematicIntroRunning) return;
+        this.isCinematicIntroRunning = false;
+        BoardManager.controls.enabled = true;
+        document.body.classList.remove('intro-running');
+        BoardManager.renderer.shadowMap.needsUpdate = true;
     },
 
     getRaycastTarget: function (clientX, clientY) {
@@ -443,6 +454,7 @@ const App = {
         if (this._shadowFrames > 0) BoardManager.renderer.shadowMap.needsUpdate = true;
 
         BoardManager.renderer.render(BoardManager.scene, BoardManager.camera);
+        BoardManager.adaptResolution(delta * 1000);
     }
 };
 

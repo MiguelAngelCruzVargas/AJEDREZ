@@ -31,6 +31,17 @@ const AudioManager = {
         { bass: 55.00, notes: [110.00, 164.81, 220.00, 293.66, 329.63], duration: 7.0 }
     ],
 
+    // Crear el AudioContext cuesta 200-300 ms (inicializa el dispositivo de
+    // audio). Se hace de antemano, en la pantalla de inicio, para que no caiga
+    // en el clic que arranca la partida. Queda suspendido hasta el primer gesto.
+    prepare: function() {
+        if (this.ctx) return;
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+        } catch (e) { /* init() lo reintentara en el primer gesto */ }
+    },
+
     init: function() {
         if (!this.ctx) {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -60,30 +71,36 @@ const AudioManager = {
     },
 
     _createReverb: function() {
-        try {
-            const sampleRate = this.ctx.sampleRate;
-            const length = sampleRate * 2.5; // 2.5 segundos de cola de reverb
-            const impulse = this.ctx.createBuffer(2, length, sampleRate);
-            const left = impulse.getChannelData(0);
-            const right = impulse.getChannelData(1);
+        // Se genera DESPUES del primer clic (setTimeout) y mas corta/barata: hacerlo
+        // en el mismo clic que inicia la partida congelaba la intro ~300 ms.
+        setTimeout(() => {
+            try {
+                const sampleRate = this.ctx.sampleRate;
+                const length = Math.floor(sampleRate * 1.8); // cola de reverb de 1.8 s
+                const impulse = this.ctx.createBuffer(2, length, sampleRate);
+                const k = Math.exp(-1 / (sampleRate * 0.6)); // decaimiento por muestra sin llamar a Math.exp en el bucle
+                for (let c = 0; c < 2; c++) {
+                    const ch = impulse.getChannelData(c);
+                    let decay = 1;
+                    for (let i = 0; i < length; i++) {
+                        ch[i] = (Math.random() * 2 - 1) * decay;
+                        decay *= k;
+                    }
+                }
 
-            for (let i = 0; i < length; i++) {
-                const decay = Math.exp(-i / (sampleRate * 0.8));
-                left[i] = (Math.random() * 2 - 1) * decay;
-                right[i] = (Math.random() * 2 - 1) * decay;
+                const convolver = this.ctx.createConvolver();
+                convolver.buffer = impulse;
+
+                const reverbGain = this.ctx.createGain();
+                reverbGain.gain.value = 0.28;
+
+                convolver.connect(reverbGain);
+                reverbGain.connect(this.masterGain);
+                this.reverbNode = convolver;
+            } catch(e) {
+                console.warn("Reverb no disponible:", e);
             }
-
-            this.reverbNode = this.ctx.createConvolver();
-            this.reverbNode.buffer = impulse;
-
-            const reverbGain = this.ctx.createGain();
-            reverbGain.gain.value = 0.28;
-
-            this.reverbNode.connect(reverbGain);
-            reverbGain.connect(this.masterGain);
-        } catch(e) {
-            console.warn("Reverb no disponible:", e);
-        }
+        }, 400);
     },
 
     setVolume: function(val) {

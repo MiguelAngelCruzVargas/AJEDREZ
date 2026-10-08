@@ -47,6 +47,15 @@ const BoardManager = {
     // Primera visita: celulares/tablets y equipos con poca CPU arrancan en
     // calidad Media o Baja en vez de Ultra (sombras 2048 + pixel ratio 2).
     detectDefaultQuality: function() {
+        // Las GPU integradas (Intel, Vega, Mali...) o por software no aguantan el
+        // modo Ultra con entorno PBR: empiezan en Media (o Baja si es por software).
+        try {
+            const gl = document.createElement('canvas').getContext('webgl');
+            const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+            const gpu = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
+            if (/SwiftShader|llvmpipe|Basic Render/i.test(gpu)) return 'low';
+            if (/Intel|UHD|Iris|Vega|Radeon\(TM\) Graphics|Mali|Adreno|PowerVR/i.test(gpu)) return 'medium';
+        } catch (e) { /* sin deteccion: se sigue con CPU/RAM */ }
         const cores = navigator.hardwareConcurrency || 4;
         const mem = navigator.deviceMemory || 4;
         const mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
@@ -424,7 +433,9 @@ const BoardManager = {
         })();
         const table = new THREE.Mesh(
             new THREE.CircleGeometry(34, 64),
-            new THREE.MeshStandardMaterial({ map: tableTex, color: 0x6b7280, roughness: 0.85, metalness: 0, envMapIntensity: 0.06 })
+            // Lambert (sin reflejos del entorno): la mesa ocupa casi toda la pantalla y con
+            // material PBR costaba ~6 ms por frame en GPU integrada para un reflejo casi nulo.
+            new THREE.MeshLambertMaterial({ map: tableTex, color: 0x6b7280 })
         );
         table.rotation.x = -Math.PI / 2;
         table.position.y = -0.72;
@@ -994,6 +1005,7 @@ const BoardManager = {
                 TWEEN.remove(t);
             }
         });
+        if (window.App) App.finishIntro();
     },
 
     // =========================================================================
@@ -1086,7 +1098,7 @@ const BoardManager = {
 
         if (quality === 'low') {
             // Rendimiento / Baja: 60 FPS en cualquier dispositivo
-            this.renderer.setPixelRatio(1.0);
+            this._setMaxPixelRatio(1.0);
             this.renderer.shadowMap.enabled = false;
             if (this.mainLight) {
                 this.mainLight.castShadow = false;
@@ -1096,7 +1108,7 @@ const BoardManager = {
             }
         } else if (quality === 'medium') {
             // Equilibrada / Media: Sombras moderadas y buen framerate
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+            this._setMaxPixelRatio(Math.min(window.devicePixelRatio, 1.25));
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFShadowMap;
             if (this.mainLight) {
@@ -1113,7 +1125,7 @@ const BoardManager = {
             }
         } else {
             // Ultra / Cinemática: Máxima fidelidad y sombras suaves
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this._setMaxPixelRatio(Math.min(window.devicePixelRatio, 2));
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             if (this.mainLight) {
@@ -1136,6 +1148,40 @@ const BoardManager = {
         this.renderer.shadowMap.needsUpdate = true;
 
         this.onResize();
+    },
+
+    // Resolucion dinamica: el coste del render crece con los pixeles (en una GPU
+    // integrada ~27 ms/frame a 1600x900). Si los frames tardan demasiado se baja
+    // la resolucion interna poco a poco; si sobra margen, se vuelve a subir.
+    _setMaxPixelRatio: function(max) {
+        this._dprMax = max;
+        this._dpr = max;
+        this._dprCeiling = max;
+        this._ft = 0;
+        this._ftFrames = 0;
+        this.renderer.setPixelRatio(max);
+    },
+
+    adaptResolution: function(dtMs) {
+        if (!this.renderer || !this._dprMax || dtMs > 200 || dtMs <= 0) return; // pestana oculta / compilacion de shaders
+        this._ft = this._ft ? this._ft * 0.92 + dtMs * 0.08 : dtMs;
+        if (++this._ftFrames < 40) return;
+        this._ftFrames = 0;
+        const now = performance.now();
+        let next = this._dpr;
+        if (this._ft > 24 && this._dpr > 0.55) {
+            next = Math.max(0.55, this._dpr - 0.15);
+            this._dprCeiling = Math.max(next, this._dpr - 0.05); // no volver enseguida al valor que fue lento
+            this._lastDrop = now;
+        } else if (this._ft < 15.5 && this._dpr < this._dprMax && now - (this._lastDrop || 0) > 8000) {
+            next = Math.min(this._dprMax, this._dprCeiling, this._dpr + 0.1);
+            if (now - (this._lastDrop || 0) > 60000) this._dprCeiling = this._dprMax;
+        }
+        if (Math.abs(next - this._dpr) > 0.01) {
+            this._dpr = next;
+            this.renderer.setPixelRatio(next);
+            this._ft = 0;
+        }
     },
 
     // Cuánto alejar la cámara respecto a la distancia "de diseño" según la

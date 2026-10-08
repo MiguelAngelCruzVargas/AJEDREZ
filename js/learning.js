@@ -658,7 +658,6 @@ const LearningManager = {
         }
 
         this.updateLessonBanner();
-        this.showCurrentStepHint();
         AudioManager.playClick();
     },
 
@@ -750,14 +749,12 @@ const LearningManager = {
                         this._forceTurn(moverColor);
                     }
                     this.updateLessonBanner();
-                    this.showCurrentStepHint();
                 }, 800);
             }
             return true;
         } else {
             // Movimiento Incorrecto
-            this.setCoachMessage(`❌ Esa no es la jugada esperada. ¡Inténtalo de nuevo siguiendo la pista!`);
-            this.showCurrentStepHint();
+            this.setCoachMessage(`❌ Esa no es la jugada esperada. ¡Inténtalo de nuevo! Si necesitas ayuda, pulsa el botón de pista.`);
             return false;
         }
     },
