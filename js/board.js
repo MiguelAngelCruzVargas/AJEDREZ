@@ -129,6 +129,7 @@ const BoardManager = {
         // 7. Inicialización de Materiales Sólidos y Tablero
         this.initMaterials();
         this.buildBoard();
+        this.applyRealism();
 
         // 8. Aplicar Calidad Gráfica
         this.setGraphicsQuality(this.graphicsQuality, false);
@@ -292,6 +293,141 @@ const BoardManager = {
             opacity: 0.75,
             side: THREE.DoubleSide
         });
+    },
+
+    // =========================================================================
+    // REALISMO: entorno de estudio, texturas procedurales y mesa
+    // =========================================================================
+    // Sin un mapa de entorno, el clearcoat y los metales no tienen nada que
+    // reflejar y todo se ve plano. Se genera uno procedural (cajas de luz
+    // tipo estudio fotografico) con PMREM: cero archivos extra, funciona offline.
+    buildEnvironmentMap: function() {
+        try {
+            const envScene = new THREE.Scene();
+            envScene.background = new THREE.Color(0x0c0f18);
+            const box = (w, h, d, x, y, z, r, g, b) => {
+                const m = new THREE.Mesh(
+                    new THREE.BoxGeometry(w, h, d),
+                    new THREE.MeshBasicMaterial({ color: new THREE.Color(r, g, b) })
+                );
+                m.position.set(x, y, z);
+                envScene.add(m);
+            };
+            box(30, 1, 30, 0, 22, 0, 3.2, 3.1, 3.0);      // softbox cenital
+            box(1, 14, 22, -22, 8, 0, 1.6, 1.8, 2.4);     // tira fria izquierda
+            box(1, 14, 22, 22, 8, 0, 2.6, 2.1, 1.3);      // tira calida derecha
+            box(26, 8, 1, 0, 6, -22, 1.8, 1.5, 0.9);      // contraluz dorado
+            box(40, 1, 40, 0, -12, 0, 0.25, 0.22, 0.2);   // rebote del suelo
+            const pm = new THREE.PMREMGenerator(this.renderer);
+            const rt = pm.fromScene(envScene, 0.04);
+            this.scene.environment = rt.texture;
+            pm.dispose();
+            return true;
+        } catch (e) {
+            console.warn('No se pudo crear el mapa de entorno:', e);
+            return false;
+        }
+    },
+
+    // Textura de canvas con ruido de valor para vetas/grano. Los valores
+    // quedan cerca del blanco para que "color del material x textura"
+    // conserve la paleta original y solo agregue variacion.
+    makeProceduralTexture: function(kind, size) {
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        let seed = kind === 'marble' ? 7 : kind === 'ebony' ? 19 : 31;
+        const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+        if (kind === 'wood') {
+            g.fillStyle = '#d9d2c8';
+            g.fillRect(0, 0, size, size);
+            for (let i = 0; i < size * 1.4; i++) {
+                const y = rnd() * size;
+                const a = 0.04 + rnd() * 0.12;
+                g.strokeStyle = `rgba(40,25,15,${a})`;
+                g.lineWidth = 0.5 + rnd() * 1.6;
+                g.beginPath();
+                g.moveTo(0, y);
+                for (let x = 0; x <= size; x += size / 8) g.lineTo(x, y + Math.sin(x * 0.02 + i) * 3 + (rnd() - 0.5) * 2);
+                g.stroke();
+            }
+        } else {
+            const base = kind === 'marble' ? 244 : 235;
+            g.fillStyle = `rgb(${base},${base},${base})`;
+            g.fillRect(0, 0, size, size);
+            const veins = kind === 'marble' ? 7 : 4;
+            for (let v = 0; v < veins; v++) {
+                let x = rnd() * size, y = rnd() * size, ang = rnd() * Math.PI * 2;
+                const width = 0.6 + rnd() * 1.8;
+                g.strokeStyle = `rgba(${kind === 'marble' ? '90,100,125' : '120,130,160'},${0.10 + rnd() * 0.22})`;
+                g.lineWidth = width;
+                g.beginPath();
+                g.moveTo(x, y);
+                for (let k = 0; k < 40; k++) {
+                    ang += (rnd() - 0.5) * 0.9;
+                    x += Math.cos(ang) * size / 30;
+                    y += Math.sin(ang) * size / 30;
+                    g.lineTo(x, y);
+                }
+                g.stroke();
+            }
+            // Moteado fino
+            for (let i = 0; i < size * 8; i++) {
+                const v = 200 + Math.floor(rnd() * 55);
+                g.fillStyle = `rgba(${v},${v},${v},0.08)`;
+                g.fillRect(rnd() * size, rnd() * size, 1.5, 1.5);
+            }
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
+        return tex;
+    },
+
+    applyRealism: function() {
+        const size = this.graphicsQuality === 'low' ? 256 : 512;
+        const m = this.materials;
+
+        m.lightSquare.map = this.makeProceduralTexture('marble', size);
+        m.darkSquare.map = this.makeProceduralTexture('ebony', size);
+        m.boardBase.map = this.makeProceduralTexture('wood', size);
+        m.boardBase.color.set(0x3a2616); // madera oscura bajo el marco dorado
+        m.boardBase.roughness = 0.5;
+        [m.lightSquare, m.darkSquare, m.boardBase].forEach(x => { x.needsUpdate = true; });
+
+        const hasEnv = this.buildEnvironmentMap();
+        if (hasEnv) {
+            const intensity = {
+                lightSquare: 0.35, darkSquare: 0.7, boardBase: 0.4, boardBorder: 1.3,
+                goldAccent: 1.4, whitePiece: 0.45, blackPiece: 1.0
+            };
+            Object.keys(intensity).forEach(k => { if (m[k]) m[k].envMapIntensity = intensity[k]; });
+            // El entorno ya aporta luz difusa: se baja la ambiental plana
+            if (this.ambientLight) this.ambientLight.intensity = 0.3;
+        }
+
+        // Mesa/fieltro bajo el tablero: recibe sombra y ancla las piezas al espacio
+        const tableTex = (() => {
+            const c = document.createElement('canvas');
+            c.width = c.height = 256;
+            const g = c.getContext('2d');
+            const grad = g.createRadialGradient(128, 128, 10, 128, 128, 128);
+            grad.addColorStop(0, '#1b2233');
+            grad.addColorStop(1, '#07090f');
+            g.fillStyle = grad;
+            g.fillRect(0, 0, 256, 256);
+            return new THREE.CanvasTexture(c);
+        })();
+        const table = new THREE.Mesh(
+            new THREE.CircleGeometry(34, 64),
+            new THREE.MeshStandardMaterial({ map: tableTex, color: 0x6b7280, roughness: 0.85, metalness: 0, envMapIntensity: 0.06 })
+        );
+        table.rotation.x = -Math.PI / 2;
+        table.position.y = -0.72;
+        table.receiveShadow = true;
+        this.scene.add(table);
+        this.tableMesh = table;
     },
 
     buildBoard: function() {

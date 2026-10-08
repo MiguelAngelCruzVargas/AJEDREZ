@@ -99,6 +99,13 @@
         return total;
     }
 
+    // Limite de tiempo duro: sin esto, UNA iteracion profunda en una posicion
+    // compleja (o en un celular lento) podia tardar muchos segundos aunque el
+    // presupuesto fuera de ~1s, porque solo se revisaba entre profundidades.
+    const SEARCH_TIMEOUT = { timeout: true };
+    let searchDeadline = Infinity;
+    let nodeCount = 0;
+
     // Cuántos plies extra, solo de capturas, se exploran al final de cada
     // rama antes de aceptar la evaluación como definitiva.
     const QUIESCENCE_MAX_PLIES = 4;
@@ -112,6 +119,7 @@
     // plies de quietud), con su propia poda alfa-beta y "stand pat"
     // (opción de no capturar si ya es la mejor jugada).
     function quiescence(game, alpha, beta, maximizing, qDepth) {
+        if ((++nodeCount & 255) === 0 && Date.now() > searchDeadline) throw SEARCH_TIMEOUT;
         const standPat = evaluatePosition(game);
         if (qDepth <= 0) return standPat;
 
@@ -143,6 +151,7 @@
 
     // MINIMAX CON PODA ALFA-BETA (con quietud al llegar al horizonte)
     function minimax(game, depth, alpha, beta, maximizing) {
+        if ((++nodeCount & 255) === 0 && Date.now() > searchDeadline) throw SEARCH_TIMEOUT;
         if (game.game_over()) return evaluatePosition(game);
         if (depth === 0) return quiescence(game, alpha, beta, maximizing, QUIESCENCE_MAX_PLIES);
 
@@ -200,19 +209,34 @@
         const deadline = Date.now() + timeBudgetMs;
         let bestMove = moves[0];
 
+        const startLen = game.history().length;
         for (let depth = 1; depth <= maxDepth; depth++) {
             let iterBest = null;
             let iterBestValue = isWhite ? -Infinity : Infinity;
 
-            for (const m of moves) {
-                game.move(m);
-                const val = minimax(game, depth - 1, -Infinity, Infinity, !isWhite);
-                game.undo();
+            // La profundidad 1 tiene un margen extra: casi siempre termina y
+            // garantiza una jugada razonable; si ni asi alcanza, se juega la
+            // primera jugada (barajada) en vez de dejar la partida colgada.
+            searchDeadline = depth === 1 ? deadline + 1200 : deadline;
+            try {
+                for (const m of moves) {
+                    game.move(m);
+                    const val = minimax(game, depth - 1, -Infinity, Infinity, !isWhite);
+                    game.undo();
 
-                if (isWhite ? (val > iterBestValue) : (val < iterBestValue)) {
-                    iterBestValue = val;
-                    iterBest = m;
+                    if (isWhite ? (val > iterBestValue) : (val < iterBestValue)) {
+                        iterBestValue = val;
+                        iterBest = m;
+                    }
                 }
+            } catch (e) {
+                if (e !== SEARCH_TIMEOUT) throw e;
+                // Se agoto el tiempo a media iteracion: deshacer lo que quedo
+                // jugado y quedarse con la ultima iteracion completa.
+                while (game.history().length > startLen) game.undo();
+                break;
+            } finally {
+                searchDeadline = Infinity;
             }
 
             if (iterBest) bestMove = iterBest;
