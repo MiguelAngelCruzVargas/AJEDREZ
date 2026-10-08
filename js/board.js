@@ -101,7 +101,7 @@ const BoardManager = {
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.08;
+        this.renderer.toneMappingExposure = 0.95;
         this.container.appendChild(this.renderer.domElement);
 
         // 4. OrbitControls con amortiguación suave
@@ -170,16 +170,18 @@ const BoardManager = {
     },
 
     setupLighting: function() {
-        // 1. Luz Hemisférica ambiental (difusa, suave y equilibrada)
-        const hemiLight = new THREE.HemisphereLight(0xeef2ff, 0x111625, 0.75);
+        // Solo 3 luces + mapa de entorno. Antes eran 6 (hemisferica, ambiental,
+        // foco, direccional, puntual, rebote): cada luz se evalua por pixel con
+        // material fisico, y la suma saturaba las casillas claras a blanco puro.
+        // El mapa de entorno (applyRealism) aporta el relleno difuso.
+        const hemiLight = new THREE.HemisphereLight(0xeef2ff, 0x111625, 0.5);
         this.scene.add(hemiLight);
 
-        // 2. Luz Ambiental
-        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+        this.ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
         this.scene.add(this.ambientLight);
 
-        // 3. Luz Principal de Estudio (Key SpotLight Fija y Estable en ángulo de 3/4)
-        this.mainLight = new THREE.SpotLight(0xfff7ea, 2.1);
+        // Luz principal de estudio (foco 3/4, unica que proyecta sombra)
+        this.mainLight = new THREE.SpotLight(0xfff7ea, 1.7);
         this.mainLight.position.set(6, 22, 14);
         this.mainLight.angle = Math.PI / 3.4;
         this.mainLight.penumbra = 0.85;
@@ -190,124 +192,10 @@ const BoardManager = {
         this.mainLight.shadow.radius = 3.5;
         this.scene.add(this.mainLight);
 
-        // 4. Luz de Relleno Suave (Fill Light en tono zafiro claro)
-        this.fillLight = new THREE.DirectionalLight(0xcfdcf5, 0.75);
+        // Relleno suave frio desde el lado opuesto
+        this.fillLight = new THREE.DirectionalLight(0xcfdcf5, 0.5);
         this.fillLight.position.set(-14, 16, -10);
         this.scene.add(this.fillLight);
-
-        // 5. Luz de Contorno Rasante (Rim Light en oro cálido para definir bordes y siluetas)
-        this.rimLight = new THREE.PointLight(0xf5d378, 1.4, 40);
-        this.rimLight.position.set(0, 5, -12);
-        this.scene.add(this.rimLight);
-
-        // 6. Luz de Rebote Inferior (Ground Bounce suave para sombras naturales)
-        this.bounceLight = new THREE.DirectionalLight(0xd9b360, 0.25);
-        this.bounceLight.position.set(0, -6, 0);
-        this.scene.add(this.bounceLight);
-    },
-
-    initMaterials: function() {
-        // Casillas Claras: Mármol satinado (antideslumbrante, con reflejo fino no cegador)
-        this.materials.lightSquare = new THREE.MeshPhysicalMaterial({
-            color: 0xebedf2,
-            metalness: 0.05,
-            roughness: 0.32,
-            clearcoat: 0.45,
-            clearcoatRoughness: 0.28
-        });
-
-        // Casillas Oscuras: Ébano azul medianoche profundo
-        this.materials.darkSquare = new THREE.MeshPhysicalMaterial({
-            color: 0x161e2e,
-            metalness: 0.2,
-            roughness: 0.35,
-            clearcoat: 0.55,
-            clearcoatRoughness: 0.25
-        });
-
-        // Base y bordes de madera noble y oro pulido
-        this.materials.boardBase = new THREE.MeshPhysicalMaterial({
-            color: 0x090c12,
-            metalness: 0.4,
-            roughness: 0.45,
-            clearcoat: 0.4
-        });
-
-        this.materials.boardBorder = new THREE.MeshPhysicalMaterial({
-            color: 0xd4af37,
-            metalness: 0.88,
-            roughness: 0.22,
-            clearcoat: 0.9,
-            emissive: 0x281c04,
-            emissiveIntensity: 0.2
-        });
-
-        // Acentos dorados metálicos para detalles de piezas y bordes
-        this.materials.goldAccent = new THREE.MeshPhysicalMaterial({
-            color: 0xdfb542,
-            metalness: 0.92,
-            roughness: 0.18,
-            clearcoat: 0.95,
-            clearcoatRoughness: 0.1
-        });
-
-        // =====================================================================
-        // PIEZAS BLANCAS: Marfil Imperial / Mármol Perlado 100% SÓLIDO
-        // (Sin transparencia, bordes nítidos y relieve tridimensional definido)
-        // =====================================================================
-        this.materials.whitePiece = new THREE.MeshPhysicalMaterial({
-            color: 0xf5f6f8,
-            metalness: 0.08,
-            roughness: 0.24,
-            transmission: 0.0, // Cero transparencia para máxima nitidez
-            transparent: false,
-            opacity: 1.0,
-            clearcoat: 0.65,
-            clearcoatRoughness: 0.22,
-            reflectivity: 0.6
-        });
-
-        // =====================================================================
-        // PIEZAS NEGRAS: Obsidiana Real / Titanio Oscuro con reflejos áureos
-        // =====================================================================
-        this.materials.blackPiece = new THREE.MeshPhysicalMaterial({
-            color: 0x161a24,
-            metalness: 0.72,
-            roughness: 0.28,
-            clearcoat: 0.85,
-            clearcoatRoughness: 0.18,
-            emissive: 0x241a08,
-            emissiveIntensity: 0.2
-        });
-
-        // Materiales de Guías y Alertas
-        this.materials.validMove = new THREE.MeshBasicMaterial({
-            color: 0x38bdf8,
-            transparent: true,
-            opacity: 0.65,
-            side: THREE.DoubleSide
-        });
-
-        this.materials.lastMove = new THREE.MeshBasicMaterial({
-            color: 0xd4af37,
-            transparent: true,
-            opacity: 0.38,
-            side: THREE.DoubleSide
-        });
-
-        this.materials.selectedSquare = new THREE.MeshBasicMaterial({
-            color: 0x10b981,
-            transparent: true,
-            opacity: 0.5,
-            side: THREE.DoubleSide
-        });
-
-        this.materials.checkAlert = new THREE.MeshBasicMaterial({
-            color: 0xf43f5e,
-            transparent: true,
-            opacity: 0.75,
-            side: THREE.DoubleSide
-        });
     },
 
     // =========================================================================
@@ -419,7 +307,7 @@ const BoardManager = {
             };
             Object.keys(intensity).forEach(k => { if (m[k]) m[k].envMapIntensity = intensity[k]; });
             // El entorno ya aporta luz difusa: se baja la ambiental plana
-            if (this.ambientLight) this.ambientLight.intensity = 0.3;
+            if (this.ambientLight) this.ambientLight.intensity = 0.1;
         }
 
         // Mesa/fieltro bajo el tablero: recibe sombra y ancla las piezas al espacio
@@ -1115,6 +1003,11 @@ const BoardManager = {
                 EffectsManager.setParticlesCount(140);
             }
         }
+
+        // Sombras bajo demanda (ver App.animate): la luz es fija, asi que
+        // solo hace falta recalcularlas cuando algo se mueve.
+        this.renderer.shadowMap.autoUpdate = false;
+        this.renderer.shadowMap.needsUpdate = true;
 
         this.onResize();
     },
