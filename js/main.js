@@ -245,7 +245,7 @@ const App = {
         let startY = 0;
 
         const onPointerDown = (event) => {
-            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning || LearningManager.currentMode === 'showcase') {
+            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning || LearningManager.currentMode === 'showcase' || LearningManager.isPieceInfoMode()) {
                 return;
             }
 
@@ -281,7 +281,7 @@ const App = {
         };
 
         const onPointerUp = (event) => {
-            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning || LearningManager.currentMode === 'showcase') {
+            if (this.state !== 'PLAYING' || EngineManager.isAITurn || EngineManager.gameOver() || UIManager.pendingPromotion || this.isCinematicIntroRunning || LearningManager.currentMode === 'showcase' || LearningManager.isPieceInfoMode()) {
                 return;
             }
 
@@ -332,6 +332,24 @@ const App = {
                 }
             }
         };
+
+        // Academia: tocar una pieza (sin arrastrar la camara) abre su ficha.
+        let infoDown = null;
+        const infoIgnore = '#top-bar, #history-panel, #stats-panel, #bottom-bar, #ai-coach-card, #learning-drawer, #piece-card, .modal-overlay, #start-overlay, button, select, input, a';
+        window.addEventListener('pointerdown', (e) => { infoDown = { x: e.clientX, y: e.clientY }; }, true);
+        window.addEventListener('pointerup', (e) => {
+            if (!infoDown || this.state !== 'PLAYING' || this.isCinematicIntroRunning || !LearningManager.isPieceInfoMode()) return;
+            if (e.target && e.target.closest && e.target.closest(infoIgnore)) return;
+            if (Math.hypot(e.clientX - infoDown.x, e.clientY - infoDown.y) > 10) return;
+            const t = this.getRaycastTarget(e.clientX, e.clientY);
+            if (t && t.type === 'piece') {
+                const key = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' }[t.pieceType];
+                if (key) {
+                    LearningManager.openPieceCard(key, t.square);
+                    App.triggerHaptic(12);
+                }
+            }
+        });
 
         window.addEventListener('pointerdown', onPointerDown);
         window.addEventListener('pointerup', onPointerUp);

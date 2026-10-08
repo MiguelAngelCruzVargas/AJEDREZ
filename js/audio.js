@@ -47,7 +47,7 @@ const AudioManager = {
             this.masterGain.connect(this.ctx.destination);
 
             this.musicGain = this.ctx.createGain();
-            this.musicGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+            this.musicGain.gain.setValueAtTime(0.28, this.ctx.currentTime);
             this.musicGain.connect(this.masterGain);
 
             this.sfxGain = this.ctx.createGain();
@@ -224,17 +224,17 @@ const AudioManager = {
             const filter = this.ctx.createBiquadFilter();
             const pan = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
 
-            osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
+            osc.type = 'sine';
             // Micro-desafinación para grosor y calidez orquestal
-            const detune = (idx - 2) * 4;
+            const detune = (idx - 2) * 2;
             osc.frequency.setValueAtTime(freq, now);
             osc.detune.setValueAtTime(detune, now);
 
             // Filtro de calidez analógica
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(400 + idx * 120, now);
-            filter.frequency.exponentialRampToValueAtTime(650 + idx * 100, now + dur * 0.5);
-            filter.frequency.exponentialRampToValueAtTime(380 + idx * 120, now + dur);
+            filter.frequency.setValueAtTime(260 + idx * 50, now);
+            filter.frequency.exponentialRampToValueAtTime(420 + idx * 50, now + dur * 0.5);
+            filter.frequency.exponentialRampToValueAtTime(250 + idx * 50, now + dur);
 
             // Envolvente suave estilo banda sonora
             const noteVol = 0.08 / (chord.notes.length * 0.5);
@@ -260,22 +260,7 @@ const AudioManager = {
             osc.stop(now + dur + 0.1);
         });
 
-        // 3. Destello armónico sutil de campana/arpegio espacial
-        const highNote = chord.notes[chord.notes.length - 1] * 2;
-        const bellOsc = this.ctx.createOscillator();
-        const bellGain = this.ctx.createGain();
-        bellOsc.type = 'sine';
-        bellOsc.frequency.setValueAtTime(highNote, now + 1.5);
-        bellGain.gain.setValueAtTime(0, now + 1.5);
-        bellGain.gain.linearRampToValueAtTime(0.04, now + 1.8);
-        bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 5.5);
-
-        bellOsc.connect(bellGain);
-        bellGain.connect(this.musicGain);
-        if (this.reverbNode) bellGain.connect(this.reverbNode);
-
-        bellOsc.start(now + 1.5);
-        bellOsc.stop(now + 5.6);
+        // (Se quito la campanita aguda: sonaba como un "pip" repetido en cada acorde.)
 
         // Programar siguiente acorde
         this._chordIndex = (this._chordIndex + 1) % this._chordProgression.length;

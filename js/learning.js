@@ -54,6 +54,7 @@ const LearningManager = {
     pieceGuide: [
         {
             key: 'king',
+            info: {"lessonId": "king-castling", "origin": "\"Rey\" viene del latín rex. \"Jaque\" y \"mate\" vienen del persa: shah (\"rey\") y shah mat (\"el rey está indefenso\"). Por eso gritar \"¡jaque!\" es, literalmente, decir \"¡rey!\".", "howTo": ["1 casilla en cualquier dirección: arriba, abajo, a los lados y diagonales.", "Nunca puede ir a una casilla atacada por una pieza rival.", "Enroque: una vez por partida mueve 2 casillas hacia una torre y esta salta al otro lado. Sirve para ponerlo a salvo."], "tips": ["En la apertura, enroca pronto: lo esconde tras los peones y activa la torre.", "En el final de partida, el rey sale a jugar: es una pieza fuerte cuando hay pocas piezas.", "Dos reyes nunca pueden quedar en casillas contiguas.", "Antes de cada jugada pregúntate: ¿mi rey está seguro?"]},
             glyph: '♔',
             name: 'Rey',
             value: 'Invaluable',
@@ -65,6 +66,7 @@ const LearningManager = {
         },
         {
             key: 'queen',
+            info: {"lessonId": "queen-gems", "origin": "En español se llama \"dama\" (señora); en inglés \"queen\" (reina). En el ajedrez indio original era el \"consejero\" del rey y apenas se movía una casilla en diagonal. Una tradición popular dice que su poder actual refleja a reinas poderosas de la época, como Isabel la Católica, aunque es más leyenda que dato comprobado.", "howTo": ["Como una torre: recto en horizontal o vertical, las casillas que quieras.", "Y como un alfil: en diagonal, las casillas que quieras.", "No puede saltar sobre otras piezas."], "tips": ["No la saques demasiado pronto: los rivales la acosarán con piezas menores y perderás tiempo.", "Es genial para \"horquillas\": atacar dos piezas a la vez.", "Cambiarla por una torre o una pieza menor suele ser mala idea: vale 9 puntos.", "Coordínala con otras piezas: sola rara vez da jaque mate."]},
             glyph: '♕',
             name: 'Dama',
             value: '9 puntos',
@@ -76,6 +78,7 @@ const LearningManager = {
         },
         {
             key: 'rook',
+            info: {"lessonId": "rook-gems", "origin": "En persa se llamaba rukh, que significa \"carro de guerra\". Al llegar a Europa se reinterpretó como una torre o castillo, y por eso en español es \"torre\". El \"enroque\" viene de la misma palabra: el rey se refugia junto a la torre.", "howTo": ["En línea recta: horizontal o vertical, tantas casillas como quieras.", "Nunca en diagonal y no puede saltar sobre otras piezas.", "Participa en el enroque junto al rey."], "tips": ["Colócalas en columnas abiertas (sin peones): ahí son más fuertes.", "Dos torres conectadas en la misma fila se protegen entre sí.", "Una torre en la séptima fila (la segunda del rival) es muy peligrosa.", "Son lentas al principio y brillan en el final de la partida."]},
             glyph: '♖',
             name: 'Torre',
             value: '5 puntos',
@@ -87,6 +90,7 @@ const LearningManager = {
         },
         {
             key: 'bishop',
+            info: {"lessonId": "bishop-gems", "origin": "\"Alfil\" viene del árabe al-fil, \"el elefante\": en el ajedrez antiguo representaba un elefante de guerra. En inglés se llama \"bishop\" (obispo) porque la hendidura de la pieza parecía la mitra de un obispo.", "howTo": ["En diagonal, tantas casillas como quieras.", "Siempre se queda en casillas del mismo color: uno de casillas claras y otro de oscuras.", "No puede saltar sobre otras piezas."], "tips": ["Tener los dos alfiles (el \"par de alfiles\") es una ventaja en posiciones abiertas.", "Colócalos en diagonales largas y despejadas.", "Cuidado con tus peones del mismo color: bloquean al alfil y lo vuelven \"malo\".", "Alfil y caballo valen lo mismo (3), pero el alfil prefiere tableros abiertos."]},
             glyph: '♗',
             name: 'Alfil',
             value: '3 puntos',
@@ -98,6 +102,7 @@ const LearningManager = {
         },
         {
             key: 'knight',
+            info: {"lessonId": "knight-gems", "origin": "\"Caballo\" por la caballería, el cuerpo más veloz de los ejércitos antiguos. En el ajedrez indio original (chaturanga) ya existía con este mismo salto en \"L\".", "howTo": ["Forma una \"L\": 2 casillas en una dirección y 1 en perpendicular.", "Es la única pieza que salta sobre otras.", "Siempre cambia de color de casilla en cada salto."], "tips": ["Llévalos al centro: desde ahí controlan hasta 8 casillas.", "\"Un caballo en el borde es un caballo triste\": en la orilla controla solo la mitad.", "Son perfectos para horquillas: atacar a la vez al rey y a una torre, por ejemplo.", "Desarrolla tus caballos pronto, antes de mover muchas veces la misma pieza."]},
             glyph: '♘',
             name: 'Caballo',
             value: '3 puntos',
@@ -109,6 +114,7 @@ const LearningManager = {
         },
         {
             key: 'pawn',
+            info: {"lessonId": "pawn-gems", "origin": "\"Peón\" viene del latín pedo, \"el que va a pie\": la infantería del ejército. Es la única pieza que no retrocede, porque la infantería avanza.", "howTo": ["Avanza 1 casilla al frente (2 en su primer movimiento).", "Captura en diagonal, una casilla hacia adelante.", "Existe la captura \"al paso\" y, al llegar a la última fila, corona: se convierte en otra pieza."], "tips": ["Pelea por el centro (e4, d4 / e5, d5): da espacio a tus piezas.", "Los peones no retroceden: piensa antes de adelantarlos.", "Peones doblados o aislados son debilidades; juntos se protegen.", "Un peón pasado (sin peones rivales delante) puede decidir el final."]},
             glyph: '♙',
             name: 'Peón',
             value: '1 punto',
@@ -621,6 +627,7 @@ const LearningManager = {
     // CONTROLADOR DE LECCIONES
     // ==========================================================================
     startLesson: function(lessonId) {
+        this.closePieceCard();
         const lesson = this.lessons.find(l => l.id === lessonId);
         if (!lesson) return;
 
@@ -759,6 +766,7 @@ const LearningManager = {
     // CONTROLADOR DE PUZZLES TÁCTICOS
     // ==========================================================================
     startPuzzle: function(index = 0) {
+        this.closePieceCard();
         this.puzzleIndex = index % this.puzzles.length;
         this.activePuzzle = this.puzzles[this.puzzleIndex];
         this.currentMode = 'puzzle';
@@ -913,19 +921,94 @@ const LearningManager = {
         AudioManager.playClick();
     },
 
+    // La ficha de pieza esta activa en la pestana Academia cuando no hay una
+    // leccion o puzzle en curso: tocar una pieza abre su ficha en vez de moverla.
+    isPieceInfoMode: function() {
+        const tab = document.querySelector('.mode-tab.active');
+        return !!tab && tab.dataset.mode === 'academy' &&
+            (this.currentMode === 'none' || this.currentMode === 'showcase');
+    },
+
+    // Ficha completa: que hace, como se mueve, origen del nombre, historia y
+    // consejos. Si se pasa la casilla de una pieza del tablero, resalta tambien
+    // sus movimientos posibles en esa posicion.
+    openPieceCard: function(key, square) {
+        const p = this.pieceGuide.find(x => x.key === key);
+        const card = document.getElementById('piece-card');
+        if (!p || !card) return;
+        this.cardPiece = p;
+        UIManager.closeLearningDrawer();
+        const i = p.info;
+        const li = (arr) => arr.map(t => `<li>${t}</li>`).join('');
+
+        card.innerHTML = `
+            <button class="btn btn-icon piece-card-close" id="piece-card-close" title="Cerrar">✕</button>
+            <div class="piece-card-head">
+                <span class="piece-card-glyph">${p.glyph}</span>
+                <div>
+                    <div class="piece-card-name">${p.name}</div>
+                    <div class="piece-card-value">Valor: ${p.value}</div>
+                </div>
+            </div>
+            <div class="piece-card-body">
+                <h4>🎯 Qué hace</h4><p>${p.role}</p>
+                <h4>♟️ Cómo se mueve</h4><ul>${li(i.howTo)}</ul>
+                <h4>🔤 Por qué se llama así</h4><p>${i.origin}</p>
+                <h4>📜 Su historia</h4><p>${p.history}</p>
+                <h4>💡 Cómo jugar con ella</h4><ul>${li(i.tips)}</ul>
+            </div>
+            <div class="piece-card-actions">
+                <button class="btn" id="piece-card-demo">▶️ Ver demo</button>
+                <button class="btn btn-primary" id="piece-card-practice">🎯 Practicar</button>
+            </div>`;
+        card.style.display = 'flex';
+
+        card.querySelector('#piece-card-close').addEventListener('click', () => {
+            AudioManager.playClick();
+            if (this.currentMode === 'showcase') this.endPieceShowcase(); else this.closePieceCard();
+        });
+        card.querySelector('#piece-card-demo').addEventListener('click', () => {
+            AudioManager.playClick();
+            if (this.currentMode !== 'showcase' || this.showcasePiece !== p) this.startPieceShowcase(key);
+            this.playPieceDemo();
+        });
+        card.querySelector('#piece-card-practice').addEventListener('click', () => {
+            AudioManager.playClick();
+            if (this.currentMode === 'showcase') this.endPieceShowcase(); else this.closePieceCard();
+            this.startLesson(p.info.lessonId);
+        });
+
+        // Resaltar los movimientos reales de la pieza tocada (aunque no sea su turno).
+        BoardManager.clearHighlights();
+        if (square && this.currentMode !== 'showcase') {
+            try {
+                const fenParts = EngineManager.game.fen().split(' ');
+                const onSquare = EngineManager.game.get(square);
+                if (onSquare) {
+                    fenParts[1] = onSquare.color;
+                    fenParts[3] = '-';
+                    const tmp = new Chess(fenParts.join(' '));
+                    BoardManager.showValidMoves(tmp.moves({ square, verbose: true }));
+                    BoardManager.showSelectedSquare(square);
+                }
+            } catch (e) { /* sin resaltado: la ficha sigue funcionando */ }
+        }
+        AudioManager.playClick();
+    },
+
+    closePieceCard: function() {
+        const card = document.getElementById('piece-card');
+        if (card) card.style.display = 'none';
+        this.cardPiece = null;
+        BoardManager.clearHighlights();
+    },
+
     updateShowcaseBanner: function() {
+        // La informacion vive ahora en la ficha (#piece-card); el banner de
+        // lecciones se oculta durante el escaparate.
         const banner = document.getElementById('lesson-banner');
-        if (!banner || !this.showcasePiece) return;
-        const p = this.showcasePiece;
-
-        banner.style.display = 'block';
-        banner.querySelector('.banner-step-title').textContent = `${p.glyph} ${p.name} · ${p.value}`;
-        banner.querySelector('.banner-step-instruction').textContent = `${p.role} ${p.moves} ${p.history}`;
-
-        const hintBtn = document.getElementById('btn-banner-hint');
-        if (hintBtn) hintBtn.innerHTML = '▶️ Ver Demo';
-        const closeBtn = document.getElementById('btn-banner-close');
-        if (closeBtn) closeBtn.style.display = 'flex';
+        if (banner) banner.style.display = 'none';
+        if (this.showcasePiece) this.openPieceCard(this.showcasePiece.key);
     },
 
     // Anima en el tablero real, sin intervención del usuario, la secuencia
@@ -969,6 +1052,7 @@ const LearningManager = {
     },
 
     endPieceShowcase: function() {
+        this.closePieceCard();
         this.showcasePiece = null;
         this._demoPlaying = false;
 
@@ -982,6 +1066,7 @@ const LearningManager = {
     },
 
     endLearningSession: function() {
+        this.closePieceCard();
         this.currentMode = 'none';
         this.activeLesson = null;
         this.activePuzzle = null;

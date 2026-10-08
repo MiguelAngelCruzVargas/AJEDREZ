@@ -537,6 +537,12 @@ const BoardManager = {
         const goldMat = this.materials.goldAccent;
         const scale = 0.78;
 
+        // Cuerpo de revolucion a partir de un perfil [radio, altura]
+        const lathe = (profile) => new THREE.Mesh(
+            new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), 48), mat);
+        const slitMat = this.materials.slit = this.materials.slit ||
+            new THREE.MeshStandardMaterial({ color: 0x05070d, roughness: 0.6 });
+
         // 1. Base principal pesada y biselada
         const baseGeo = new THREE.CylinderGeometry(0.54, 0.64, 0.28, 36);
         const base = new THREE.Mesh(baseGeo, mat);
@@ -638,48 +644,68 @@ const BoardManager = {
                 top.add(rightEar);
                 break;
 
-            case 'b': // Alfil con Hendidura y Remate
-                body = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.50, 1.85, 32), mat);
-                body.position.y = 1.22;
-                top = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.98, 32), mat);
-                top.position.y = 2.62;
-
-                const bRing = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.04, 16, 32), goldMat);
-                bRing.position.y = 2.15;
+            case 'b': { // Alfil: silueta de mitra, delgado, con hendidura
+                body = lathe([
+                    [0.52, 0.28], [0.40, 0.45], [0.27, 0.8], [0.22, 1.3], [0.40, 1.42], [0.42, 1.52],
+                    [0.24, 1.62], [0.30, 1.85], [0.37, 2.3], [0.30, 2.75], [0.14, 3.05], [0.0, 3.12]
+                ]);
+                const slit = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.07, 0.05), slitMat);
+                slit.position.set(0, 2.55, 0);
+                slit.rotation.z = Math.PI / 5;
+                const bRing = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.045, 16, 36), goldMat);
+                bRing.position.y = 1.47;
                 bRing.rotation.x = Math.PI / 2;
-                group.add(bRing);
-
-                extra = new THREE.Mesh(new THREE.SphereGeometry(0.14, 20, 20), goldMat);
-                extra.position.y = 3.18;
-                break;
-
-            case 'q': // Dama Majestuosa con Corona
-                body = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.54, 2.25, 32), mat);
-                body.position.y = 1.42;
-                top = new THREE.Mesh(new THREE.CylinderGeometry(0.64, 0.24, 0.58, 32), mat);
-                top.position.y = 2.82;
-
-                const qCrown = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 16, 32), goldMat);
-                qCrown.position.y = 3.08;
-                qCrown.rotation.x = Math.PI / 2;
-                group.add(qCrown);
-
-                extra = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 32), goldMat);
-                extra.position.y = 3.28;
-                break;
-
-            case 'k': // Rey con Cruz Imperial
-                body = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.56, 2.55, 32), mat);
-                body.position.y = 1.55;
-                top = new THREE.Mesh(new THREE.CylinderGeometry(0.54, 0.34, 0.48, 32), mat);
-                top.position.y = 3.02;
-
+                const bBall = new THREE.Mesh(new THREE.SphereGeometry(0.13, 20, 20), goldMat);
+                bBall.position.y = 3.2;
                 extra = new THREE.Group();
-                const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.70, 0.14), goldMat);
-                const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.14, 0.14), goldMat);
-                extra.add(crossV, crossH);
-                extra.position.y = 3.62;
+                extra.add(slit, bRing, bBall);
                 break;
+            }
+
+            case 'q': { // Dama: cuerpo esbelto y corona de 8 puntas con perlas
+                body = lathe([
+                    [0.54, 0.28], [0.42, 0.5], [0.28, 0.9], [0.23, 1.6], [0.40, 1.75], [0.43, 1.88],
+                    [0.26, 2.0], [0.30, 2.4], [0.46, 2.9], [0.60, 3.15], [0.54, 3.25], [0.38, 3.25], [0.0, 3.22]
+                ]);
+                extra = new THREE.Group();
+                for (let i = 0; i < 8; i++) {
+                    const ang = (i * Math.PI) / 4;
+                    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.34, 12), goldMat);
+                    spike.position.set(Math.cos(ang) * 0.5, 3.42, Math.sin(ang) * 0.5);
+                    const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), goldMat);
+                    pearl.position.set(Math.cos(ang) * 0.5, 3.64, Math.sin(ang) * 0.5);
+                    extra.add(spike, pearl);
+                }
+                const qBand = new THREE.Mesh(new THREE.TorusGeometry(0.57, 0.05, 16, 40), goldMat);
+                qBand.position.y = 3.12;
+                qBand.rotation.x = Math.PI / 2;
+                const qOrb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 24), goldMat);
+                qOrb.position.y = 3.4;
+                extra.add(qBand, qOrb);
+                break;
+            }
+
+            case 'k': { // Rey: la pieza mas alta, corona cerrada y gran cruz
+                body = lathe([
+                    [0.58, 0.28], [0.45, 0.5], [0.30, 0.95], [0.26, 1.8], [0.44, 1.95], [0.47, 2.08],
+                    [0.28, 2.2], [0.33, 2.7], [0.50, 3.2], [0.57, 3.55], [0.50, 3.72], [0.0, 3.72]
+                ]);
+                const kBand = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.06, 16, 40), goldMat);
+                kBand.position.y = 3.42;
+                kBand.rotation.x = Math.PI / 2;
+                const kBand2 = new THREE.Mesh(new THREE.TorusGeometry(0.51, 0.04, 16, 40), goldMat);
+                kBand2.position.y = 3.68;
+                kBand2.rotation.x = Math.PI / 2;
+                const kOrb = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 20), goldMat);
+                kOrb.position.y = 3.82;
+                const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.85, 0.16), goldMat);
+                crossV.position.y = 4.35;
+                const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.16, 0.16), goldMat);
+                crossH.position.y = 4.5;
+                extra = new THREE.Group();
+                extra.add(kBand, kBand2, kOrb, crossV, crossH);
+                break;
+            }
         }
 
         if (body) { body.castShadow = true; body.receiveShadow = true; group.add(body); }
