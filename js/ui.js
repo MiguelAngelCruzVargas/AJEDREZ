@@ -878,6 +878,7 @@ const UIManager = {
             statusEl.textContent = `¡JAQUE MATE! Ganan las ${winner}`;
             this.showGameOverModal(`¡JAQUE MATE!`, `Victoria épica para las ${winner}`);
             AudioManager.playVictory();
+            BoardManager.toppleKing(EngineManager.turn());
             App.triggerHaptic([100, 50, 100, 50, 200]);
             // isWhite === true significa que el bando en jaque mate es Blancas
             // (el humano), es decir, ganó la IA.
@@ -1033,7 +1034,7 @@ const UIManager = {
             const capMesh = BoardManager.pieceMeshes[to];
             if (capMesh) {
                 EffectsManager.createCaptureExplosion(capMesh.position, move.color !== 'w');
-                BoardManager.piecesGroup.remove(capMesh);
+                BoardManager.knockOutPiece(capMesh, pieceMesh ? pieceMesh.position : null);
             }
             AudioManager.playCapture(soundPos);
             App.triggerHaptic(35);

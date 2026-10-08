@@ -682,11 +682,65 @@ const BoardManager = {
         return group;
     },
 
+    // La pieza capturada sale despedida del tablero, girando, en vez de
+    // desaparecer de golpe. Se queda en piecesGroup mientras vuela; el
+    // siguiente renderBoardPieces() la limpia.
+    knockOutPiece: function(mesh, attackerPos) {
+        if (!mesh) return;
+        mesh.userData.flying = true;
+        let dx = mesh.position.x, dz = mesh.position.z;
+        if (attackerPos) { dx -= attackerPos.x; dz -= attackerPos.z; }
+        const len = Math.hypot(dx, dz) || 1;
+        // Siempre hacia afuera del tablero (el tablero mide ~8 de lado)
+        const tx = mesh.position.x + (dx / len) * 3 + Math.sign(mesh.position.x || 1) * 0.5;
+        const tz = mesh.position.z + (dz / len) * 3;
+        const farX = tx;
+        new TWEEN.Tween(mesh.position)
+            .to({ x: farX, y: 3.2, z: tz }, 260)
+            .easing(TWEEN.Easing.Quadratic.Out)
+            .onComplete(() => {
+                new TWEEN.Tween(mesh.position)
+                    .to({ y: -0.4 }, 260)
+                    .easing(TWEEN.Easing.Quadratic.In)
+                    .start();
+            })
+            .start();
+        new TWEEN.Tween(mesh.rotation)
+            .to({ x: (Math.random() - 0.5) * 5, z: (Math.random() - 0.5) * 5 }, 520)
+            .start();
+        new TWEEN.Tween(mesh.scale)
+            .to({ x: 0.01, y: 0.01, z: 0.01 }, 380)
+            .delay(180)
+            .easing(TWEEN.Easing.Quadratic.In)
+            .onComplete(() => { if (mesh.parent) mesh.parent.remove(mesh); })
+            .start();
+    },
+
+    // Jaque mate: el rey derrotado se inclina y cae sobre el tablero.
+    toppleKing: function(color) {
+        const sq = EngineManager.findKingSquare(color);
+        const mesh = sq && this.pieceMeshes[sq];
+        if (!mesh) return;
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        new TWEEN.Tween(mesh.rotation)
+            .to({ z: dir * (Math.PI / 2 - 0.08) }, 900)
+            .delay(500)
+            .easing(TWEEN.Easing.Bounce.Out)
+            .start();
+        new TWEEN.Tween(mesh.position)
+            .to({ y: 0.7 }, 900)
+            .delay(500)
+            .easing(TWEEN.Easing.Bounce.Out)
+            .start();
+    },
+
     // Renderizar todas las piezas en el tablero
     renderBoardPieces: function(boardState) {
-        while (this.piecesGroup.children.length > 0) {
-            this.piecesGroup.remove(this.piecesGroup.children[0]);
-        }
+        // Las piezas capturadas en pleno vuelo (userData.flying) se respetan:
+        // se eliminan solas al terminar su animacion.
+        this.piecesGroup.children.slice().forEach(c => {
+            if (!c.userData || !c.userData.flying) this.piecesGroup.remove(c);
+        });
         this.pieceMeshes = {};
 
         const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
