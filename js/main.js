@@ -96,6 +96,7 @@ const App = {
         this.launchGame = (mode) => {
             if (this.isCinematicIntroRunning) return;
             this.isCinematicIntroRunning = true;
+            document.body.classList.add('intro-running');
             this.currentGameMode = mode;
 
             // Iniciar Audio Cinemático Envolvente
@@ -173,6 +174,8 @@ const App = {
                         .onComplete(() => {
                             BoardManager.controls.enabled = true;
                             this.isCinematicIntroRunning = false;
+                            document.body.classList.remove('intro-running');
+                            BoardManager.renderer.shadowMap.needsUpdate = true;
                         })
                         .start();
                 })
@@ -414,8 +417,10 @@ const App = {
         // Mapa de sombras bajo demanda: re-renderizarlo cada frame (2048x2048)
         // era lo mas pesado de la escena. Solo se recalcula mientras algo se
         // anima (jugadas, capturas, gemas) y unos frames despues de terminar.
-        const moving = TWEEN.getAll().length > 0 || EffectsManager.particles.length > 0 ||
-            EffectsManager.gemMeshes.length > 0;
+        // Durante el menu y la intro solo se mueve la camara (la luz es fija),
+        // asi que las sombras no cambian y se evita recalcularlas cada frame.
+        const moving = !this.isCinematicIntroRunning && App.state !== 'MENU' && (TWEEN.getAll().length > 0 || EffectsManager.particles.length > 0 ||
+            EffectsManager.gemMeshes.length > 0);
         this._shadowFrames = moving ? 12 : Math.max(0, (this._shadowFrames || 0) - 1);
         if (this._shadowFrames > 0) BoardManager.renderer.shadowMap.needsUpdate = true;
 

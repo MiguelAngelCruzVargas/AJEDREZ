@@ -20,7 +20,7 @@
  * CACHE_VERSION - si no, seguirán viendo la caché vieja indefinidamente.
  */
 
-const CACHE_VERSION = 'ajedrez3d-v13';
+const CACHE_VERSION = 'ajedrez3d-v15';
 
 const APP_SHELL = [
     './',
@@ -86,7 +86,7 @@ self.addEventListener('fetch', (event) => {
     if (new URL(req.url).origin !== self.location.origin) return;
 
     event.respondWith(
-        caches.match(req).then((cached) => {
+        caches.match(req, { ignoreSearch: true }).then((cached) => {
             if (cached) return cached;
 
             return fetch(req).then((res) => {

@@ -25,7 +25,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     match /ajedrez_rooms/{roomCode} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
+      allow list: if false;
 
       allow create: if request.auth != null
                     && request.resource.data.players.white.uid == request.auth.uid;

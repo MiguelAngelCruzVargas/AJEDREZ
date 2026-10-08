@@ -245,7 +245,15 @@ const EngineManager = {
             // caso improbable), esto evita que la partida se quede colgada
             // para siempre esperando y cae al motor de respaldo.
             return new Promise((resolve, reject) => {
-                const timeoutId = setTimeout(() => reject(new Error('Stockfish tardó demasiado en responder')), 20000);
+                const timeoutId = setTimeout(() => {
+                    // Worker colgado: se descarta para que _sfBusy no bloquee todas las jugadas siguientes.
+                    this._sfFailed = true;
+                    if (this._sfWorker) { this._sfWorker.terminate(); this._sfWorker = null; }
+                    this._sfBusy = false;
+                    this._sfCurrentResolve = null;
+                    this._sfQueue.length = 0;
+                    reject(new Error('Stockfish tardó demasiado en responder'));
+                }, 20000);
                 const resolveOnce = (move) => { clearTimeout(timeoutId); resolve(move); };
                 this._sfQueue.push({ fen, skill, movetimeMs, resolve: resolveOnce });
                 this._sfProcessQueue();

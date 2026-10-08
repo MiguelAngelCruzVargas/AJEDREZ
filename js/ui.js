@@ -374,6 +374,24 @@ const UIManager = {
             });
         }
 
+        // Atajos de teclado: U deshacer, F voltear, N nueva, H pista, T amenazas, Esc deseleccionar
+        const shortcuts = { u: 'btn-undo', f: 'btn-flip', n: 'btn-new', h: 'btn-hint', t: 'btn-heatmap' };
+        window.addEventListener('keydown', (e) => {
+            if (App.state !== 'PLAYING' || e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.target && e.target.closest('input, select, textarea')) return;
+            const modalOpen = Array.from(document.querySelectorAll('.modal-overlay'))
+                .some(m => m.style.display && m.style.display !== 'none');
+            if (modalOpen) return;
+            if (e.key === 'Escape') {
+                BoardManager.clearHighlights();
+                this.selectedSquare = null;
+                return;
+            }
+            const id = shortcuts[e.key.toLowerCase()];
+            const btn = id && document.getElementById(id);
+            if (btn && btn.offsetParent !== null) btn.click();
+        });
+
         // Botón Voltear Tablero
         const btnFlip = document.getElementById('btn-flip');
         if (btnFlip) {
@@ -398,6 +416,8 @@ const UIManager = {
         const btnNew = document.getElementById('btn-new');
         if (btnNew) {
             btnNew.addEventListener('click', () => {
+                // Online el tablero es compartido: reiniciarlo solo aqui lo desincronizaria.
+                if (App.currentGameMode === 'online') return;
                 AudioManager.playClick();
                 this.cancelPendingAIMove();
                 this._adaptiveResultRecorded = false;

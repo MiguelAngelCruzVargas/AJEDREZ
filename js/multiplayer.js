@@ -196,7 +196,9 @@ const MultiplayerManager = {
     // Sube al servidor la jugada que ACABA de hacer el jugador local.
     pushMove: async function (move) {
         if (!this.roomCode) return;
-        const moveCount = EngineManager.history().length;
+        // Contador propio: history().length vuelve a 0 tras cargar un FEN
+        // (reconexion) y el rival ignoraria todas las jugadas siguientes.
+        const moveCount = this.lastAppliedMoveCount + 1;
         this.lastAppliedMoveCount = moveCount;
         const roomRef = doc(this.db, 'ajedrez_rooms', this.roomCode);
         try {

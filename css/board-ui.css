@@ -623,8 +623,8 @@ body.menu-active #bottom-bar {
     height: 100%;
     background:
         radial-gradient(circle at 50% 38%, rgba(12, 17, 30, 0.48) 0%, rgba(8, 11, 20, 0.82) 65%, rgba(4, 6, 12, 0.96) 100%);
-    backdrop-filter: blur(1.5px);
-    -webkit-backdrop-filter: blur(1.5px);
+    /* Sin backdrop-filter: desenfocar a pantalla completa un canvas WebGL que
+       se redibuja cada frame era lo que mas frenaba el menu y la intro. */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -723,14 +723,11 @@ body.menu-active #bottom-bar {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: heroGoldShimmer 8s linear infinite;
-    filter: 
-        drop-shadow(0 1px 0 #6e5008)
-        drop-shadow(0 2px 0 #4f3905)
-        drop-shadow(0 3px 0 #362602)
-        drop-shadow(0 5px 2px rgba(0, 0, 0, 0.85))
-        drop-shadow(0 14px 28px rgba(0, 0, 0, 0.95))
-        drop-shadow(0 0 35px rgba(212, 175, 55, 0.3));
+    /* Estatico y con pocas sombras: animar el degradado de un texto con 6
+       drop-shadow obligaba a repintar el filtro completo en cada frame. */
+    filter:
+        drop-shadow(0 3px 0 #4f3905)
+        drop-shadow(0 12px 18px rgba(0, 0, 0, 0.9));
     user-select: none;
 }
 
@@ -1358,4 +1355,14 @@ body.menu-active #bottom-bar {
     #options-dropdown {
         max-height: 80vh;
     }
+}
+
+
+/* Durante la cinematica de entrada el canvas WebGL cambia cada frame: los
+   desenfoques de fondo del HUD que aparece encima se recalculan en cada uno. */
+body.intro-running *,
+body.intro-running *::before,
+body.intro-running *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
